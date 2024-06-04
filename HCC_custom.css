@@ -1,0 +1,24 @@
+div.sidebar-item-container:has(a:active) {
+    background-color: blue;
+    border: 2px solid white;
+    color: lightgray;
+  }
+  
+  div.sidebar-item-container:hover {
+    /* Apply your desired styles here */
+    background-color: green;
+    color: white;
+  }
+  
+  li.sidebar-item:has(a.active) {
+    background-color: blue;
+    border: 2px solid white;
+    color: lightgray;
+  }
+  
+
+  li.sidebar-item a.active {
+    background-color: lightblue;
+    color: green;
+  }
+  

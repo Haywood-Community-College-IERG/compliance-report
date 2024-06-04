@@ -1,0 +1,91 @@
+# History files
+.Rhistory
+.Rapp.history
+
+# Session Data files
+.RData
+.RDataTmp
+
+# User-specific files
+.Ruserdata
+
+# Example code in package build process
+*-Ex.R
+
+# Output files from R CMD build
+/*.tar.gz
+
+# Output files from R CMD check
+/*.Rcheck/
+
+# RStudio files
+.Rproj.user/
+
+# produced vignettes
+vignettes/*.html
+vignettes/*.pdf
+
+# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
+.httr-oauth
+
+# knitr and R markdown default cache directories
+*_cache/
+/cache/
+
+# Temporary files created by R markdown
+*.utf8.md
+*.knit.md
+
+# R Environment Variables
+.Renviron
+
+# pkgdown site
+docs/
+
+# translation temp files
+po/*~
+
+# RStudio Connect folder
+rsconnect/
+
+/.quarto/
+
+/.luarc.json
+/_site
+/requirements
+/others
+/images
+/docx
+/documents
+/_book
+/renv
+/Word_Test
+/index.pdf.md
+/index.qmd
+/index-backup.qmd
+/leadership.qmd
+/overview.qmd
+/qep.qmd
+/QEP Impact Report.pdf.md
+/QEP Impact Report.qmd
+/renv.lock
+/requirements.qmd
+/signatures.pdf.md
+/signatures.qmd
+/summary.pdf.md
+/summary.qmd
+/support.qmd
+/trace_pdf.log
+/trace_website.log
+/WCU Style Guide.docx
+/Welcome - PDF.qmd
+/Welcome - Website.qmd
+/_extensions/fontawesome
+/_extensions/fontawesome5
+/R
+leadership.ipynb
+/.vscode
+/.Rprofile
+/*.zip
+/documents.qmd
+*.native

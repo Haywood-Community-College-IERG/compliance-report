@@ -1,0 +1,1 @@
+To use SVG's in your Quarto, you will need to install `rsvg-convert`. To do that on Windows, run `choco install rsvg-convert`. See (Quarto: PDF Format Improvements)[https://quarto.org/docs/prerelease/1.3/pdf.html] for more details.

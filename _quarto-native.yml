@@ -1,0 +1,23 @@
+project:
+  type: website
+
+  
+  render:
+    - index.qmd
+    - requirements.qmd
+    - requirements/*.qmd
+    # - requirements/Standard 14.3.qmd
+    - QEP Impact Report.qmd
+    - support.qmd
+    - overview.qmd
+    - leadership.qmd
+    - signatures.qmd
+    - summary.qmd
+    - documents.qmd
+
+filters:
+  - accreditation
+  - fontawesome
+  - quarto
+
+format: native

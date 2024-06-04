@@ -1,0 +1,69 @@
+profile: 
+  group: 
+    - [website, pdf, native]
+  default: website
+  
+# filters:
+#   - accreditation
+#   - fontawesome
+#   - quarto
+
+accreditation: 
+  # - name: "Accreditation"
+
+  # target attribute for links in HTML
+  # - target: "_blank"
+
+  # Add page number to URL in HTML output
+  # Default: "false"
+  # - page: "true"
+
+
+
+  ### SOURCES ###
+  # Word style used for list of all sources/artifacts/evidence
+  # Default: "Sources Block"
+  - sources_style: "Sources"
+
+  # The name of the header in Word document where sources will be listed
+  # Default: "Sources"
+  #- sources_header: "Sources"
+
+  # The path to the folder where the sources will be stored
+  # Default: "documents"
+  #- sources_path: "documents"
+
+  # Specify whether the sources should be sorted alphabetically or by order of appearance
+  # Default is "true" (alphabetical)
+  #- sources_sorted: "false"
+
+  ### LINKs ###
+  # Word style used for links to sources/artifacts/evidence
+  # NOTE: All artifacts should be PDFs
+  # Default: "Evidence Link Char"
+  #- link_artifact_style: "Evidence Link Char"
+  - link_artifact_style: "Link to Artifact"
+
+  # Word style used for links to other standards
+  # Default: "Standard Link Char"
+  #- link_standard_style: "Standard Link Char"
+  - link_standard_style: "Link to Standard"
+
+  ### LINK TO STANDARDS ###
+  # path to the folder where the requirements are stored for HTML output
+  # Default: "requirements"
+  #- standards_path: "requirements"
+
+  # Include target attribute for links in HTML on the requirements page, if provided above?
+  # Default: "false"
+  #- standards_target: "true"
+
+  # Suffix appended to standards that are core requirements.
+  # To include a space, you must escape by enclosing it in \\{ }. Blame Pandoc.
+  # Default: ""
+  - standards_core_suffix: "\\{ }(CR)"
+
+  ### JUDGMENT ###
+  # Word style used for judgment
+  # Default: "Judgment"
+  #- judgment_style: "Judgment"

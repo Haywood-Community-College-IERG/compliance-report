@@ -1,0 +1,116 @@
+project:
+  type: website
+
+  
+  render:
+    - index.qmd
+    - requirements.qmd
+    - requirements/*.qmd
+    # - requirements/Standard 14.3.qmd
+    - QEP Impact Report.qmd
+    - support.qmd
+    - overview.qmd
+    - leadership.qmd
+    - signatures.qmd
+    - summary.qmd
+    - documents.qmd
+
+filters:
+  - accreditation
+  - fontawesome
+  - quarto
+
+website:
+  title: "5th-Year Reaffirmation"
+  favicon: images/Clyde.png
+  page-navigation: true
+  # reader-mode: true
+  back-to-top-navigation: true 
+  search: false
+    # location: navbar
+    # type: textbox
+  page-footer: 
+    left: 
+      - text: Haywood Community College Home Page
+        href: https://www.haywood.edu/
+        target: _blank
+    right:
+      - text: Help
+        href: support.qmd
+  
+  sidebar:
+    - title: "Home"
+      style: "docked"
+      background: dark
+      contents:
+        - section: "Home" 
+          contents: 
+            - index.qmd
+            - overview.qmd
+            - leadership.qmd
+            - signatures.qmd
+            - summary.qmd
+
+    - title: "Requirements"
+      contents:
+        - requirements.qmd
+        - requirements/Standard 05.4.qmd
+        - requirements/Standard 06.1 (CR).qmd
+        - requirements/Standard 06.2.qmd 
+        - requirements/Standard 08.1 (CR).qmd
+        - requirements/Standard 08.2.qmd
+        - requirements/Standard 09.1 (CR).qmd
+        - requirements/Standard 09.2 (CR).qmd
+        - requirements/Standard 10.2.qmd 
+        - requirements/Standard 10.3.qmd
+        - requirements/Standard 10.5.qmd
+        - requirements/Standard 10.6.qmd
+        - requirements/Standard 10.7.qmd
+        - requirements/Standard 10.9.qmd
+        - requirements/Standard 12.1 (CR).qmd
+        - requirements/Standard 12.4.qmd
+        - requirements/Standard 13.6.qmd
+        - requirements/Standard 13.7.qmd
+        - requirements/Standard 13.8.qmd
+        - requirements/Standard 14.1.qmd
+        - requirements/Standard 14.3.qmd
+        - requirements/Standard 14.4.qmd
+        
+    - title: "QEP"
+      contents: 
+        - QEP Impact Report.qmd
+    
+    - title: "Documents"
+      contents: 
+        - documents.qmd
+
+  navbar:
+    logo: images/HCC Logo (White).png
+    background: dark
+    left: 
+      - text: "Home"
+        href: index.qmd
+      - text: "Requirements"
+        href: requirements.qmd
+      - text: "QEP"
+        href: QEP Impact Report.qmd
+      - text: "Documents"
+        href: documents.qmd
+    tools:
+      - icon: question-circle
+        href: support.qmd
+        text: Help
+      - icon: file-pdf
+        text: PDF 
+        href: ../_book/HCC-5th-Year-Reaffirmation.pdf
+        target: _blank
+        
+format:
+  html:
+    theme: HCC_custom.scss
+    #css: HCC_custom.css
+    toc: true
+    toc-expand: true 
+    quarto-required: ">=1.4.0"
+    #embed-resources: true
+    #link-external-icon: true

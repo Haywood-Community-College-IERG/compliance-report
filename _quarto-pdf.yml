@@ -1,0 +1,79 @@
+project:
+  type: book
+
+  render:
+    - index.qmd
+    - requirements/*.qmd
+    - QEP Impact Report.qmd
+    - overview.qmd
+    # - leadership.qmd
+    - signatures.qmd
+    - summary.qmd
+
+filters:
+#  - accreditation
+  - quarto
+  - fontawesome
+
+
+book:
+  title: "HCC 5th-Year Reaffirmation"
+  author: "HCC IERG"
+  sidebar:
+    style: docked
+    logo: images/HCC%20Logo-350-377%20Transparent.png
+  date: "1/11/2024"
+  downloads: [pdf]
+  chapters:
+    - index.qmd
+    - part: "Signatures Attesting to Integrity" 
+      chapters: 
+        - signatures.qmd
+    - part: "Institutional Summary Form Prepared for SACSCOC Reviews"
+      chapters: 
+        - summary.qmd
+    # - part: "TEMP Support TEMP"
+    #   chapters: 
+    #     - support.qmd
+    - part: "Requirements"
+      chapters: 
+        - requirements/Standard 05.4.qmd
+        - requirements/Standard 06.1 (CR).qmd
+        - requirements/Standard 06.2.qmd 
+        - requirements/Standard 08.1 (CR).qmd
+        - requirements/Standard 08.2.qmd
+        - requirements/Standard 09.1 (CR).qmd
+        - requirements/Standard 09.2 (CR).qmd
+        - requirements/Standard 10.2.qmd 
+        - requirements/Standard 10.3.qmd
+        - requirements/Standard 10.5.qmd
+        - requirements/Standard 10.6.qmd
+        - requirements/Standard 10.7.qmd
+        - requirements/Standard 10.9.qmd
+        - requirements/Standard 12.1 (CR).qmd
+        - requirements/Standard 12.4.qmd
+        - requirements/Standard 13.6.qmd
+        - requirements/Standard 13.7.qmd
+        - requirements/Standard 13.8.qmd
+        - requirements/Standard 14.1.qmd
+        - requirements/Standard 14.3.qmd
+        - requirements/Standard 14.4.qmd
+    - part: "Impact Report of the Quality Enhancement Plan"
+      chapters: 
+        - QEP Impact Report.qmd
+
+format:
+#  html:
+#    theme: sandstone
+#    number-sections: false
+  pdf:
+    documentclass: scrreport
+    number-sections: true
+    number-depth: -1
+    toc-depth: 1
+    keep-tex: true
+    keep-md: true
+    #latex-clean: false
+
+editor: source
+
