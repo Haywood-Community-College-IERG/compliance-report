@@ -18,7 +18,18 @@ local standards_path = "requirements"
 local standards_target = false
 local standards_core_suffix = ""
 
-local link_artifact_style = "Link to Artifact"
+local link_to_artifact_style = "Link to Artifact"
+
+local unitcode_style = "Unit Code"
+
+local link_to_artifact_assessment_style = "Assessment"
+local link_to_artifact_assessment_sep = "_"
+local link_to_artifact_assessment_suffix = ""
+
+local link_to_artifact_review_style = "Review"
+local link_to_artifact_review_sep = "_"
+local link_to_artifact_review_suffix = "_PR"
+
 local link_standard_style = "Link to Standard"
 
 local judgment_style = "Judgment"
@@ -41,14 +52,18 @@ local raw_type = "html"
 
 local sources_list = {}
 
-local trace_options = { -- "link_artifact_style",
+local trace_options = { "link_to_artifact_style",
+                        --"link_to_artifact_style:evidence_search",
                         "link_standard_style", 
+                        -- "make_link",
+                        "unitcode_style",
                         -- "link_standard_style:evidence_search"
                         -- "sources_block",
                         -- "judgment_style",
                         -- "sources_style",
                         -- "DIV",
                         "SPAN",
+                        --"STR","PLAIN",
                         -- "HEADER",
                         -- "META",
                         -- "IZ",
@@ -242,8 +257,236 @@ function insert_zero(prefix_str, str)
     rtn = string.gsub(str, num_str, new_num_str)
     qldebug("IZ", "    ...IZ->: [" .. rtn .. "]")
     return rtn
+end
+    
+function make_link(path, evidence, evidence_pg, evidence_txt)
+    qldebug("make_link", "    ...path: " .. path)
+    qldebug("make_link", "    ...evidence: " .. evidence)
+    qldebug("make_link", "    ...evidence_pg: " .. evidence_pg)
+    qldebug("make_link", "    ...evidence_txt: " .. evidence_txt)
+
+    -- Create the link to the evidence file as markdown. This will replace the former text.
+    if raw_type == "html" then 
+        if artifact_target ~= "" then 
+            target_str = " target=\"" .. artifact_target .. "\""
+
+        else
+            target_str = ""
+
+        end
+
+        --rtn_str = "<a href=\"" .. sources_path .. "/" .. sources_path_sub .. "/" .. evidence .. evidence_pg .. "\" " .. target_str .. " >" .. evidence_txt .. "</a>"
+        rtn_str = "<a href=\"" .. path .. evidence .. evidence_pg .. "\" " .. target_str .. " >" .. evidence_txt .. "</a>"
+
+    elseif raw_type == "pdf" then
+        rtn_str = "[" .. evidence_txt .. "](" .. path .. evidence .. evidence_pg .. ")"
+
+    else 
+        rtn_str = "[" .. evidence_txt .. "](" .. path .. evidence .. evidence_pg .. ")"
+
+    end
+
+    return rtn_str
+    
+end
+
+function link_to_artifact(el, artifact_type)
+    qldebug("link_to_artifact_style", "Check Span: ")
+    qldebug("link_to_artifact_style", "    ...content: " .. dump(el.content))
+    qldebug("link_to_artifact_style", "    ...attributes: " .. dump(el.attr))
+    -- qldebug("link_to_artifact_style", "    ...custom-style: " .. pandoc.utils.stringify(el_attr["custom-style"]))
+
+    extension = ".pdf"
+
+    if artifact_type == "artifact" then
+        evidence_txt = pandoc.utils.stringify(el.content)
+        evidence = evidence_txt .. extension
+    elseif artifact_type == "assessment" then
+        evidence_txt = pandoc.utils.stringify(el.content)
+        evidence = _G.unit_code .. link_to_artifact_assessment_sep .. evidence_txt .. link_to_artifact_assessment_suffix .. extension
+    elseif artifact_type == "review" then
+        evidence_txt = pandoc.utils.stringify(el.content)
+        evidence = _G.unit_code .. link_to_artifact_review_sep .. evidence_txt .. link_to_artifact_review_suffix .. extension
+    else
+        qldebug("link_to_artifact_style", "ERROR: Unknown artifact type (" .. artifact_type .. ")")
+        return el
     end
     
+    evidence_pg = ""
+
+    -- If the evidence has a page number, and artifact_page is true, 
+    --     then construct the page number link
+    pat = " - Page "
+    idx = string.find(evidence,pat,1,true)
+    if idx ~= nil then
+        if artifact_page then
+            evidence_pg = "#page=" .. string.sub(evidence,idx + string.len(pat))
+        end
+
+        -- Remove the page number from the evidence name
+        evidence = string.sub(evidence, 1, idx - 1)
+
+    elseif artifact_page then
+        --  evidence_pg = "#page=1"
+        evidence_pg = ""
+
+    end
+
+    qldebug("link_to_artifact_style", "    ...evidence: " .. evidence .. "  -  " .. evidence_pg)
+
+    qldebug("link_to_artifact_style", "    ...dir_str: " .. quarto.project.offset .. "    -    " .. quarto.project.directory .. "    -    " .. quarto.doc.input_file) -- sources_path .. "/" .. sources_path_sub
+    dir_str = pandoc.path.make_relative(pandoc.utils.stringify(sources_path), quarto.doc.input_file) .. "/" .. sources_path_sub
+    qldebug("link_to_artifact_style", "    ...dir_str: " .. dir_str)
+
+    -- Check for existence of evidence file in the document directory.
+    -- All artifacts must be PDFs.
+    files = pandoc.system.list_directory(dir_str)
+    local fn = nil
+    for _, file in ipairs(files) do 
+        qldebug("link_to_artifact_style:evidence_search", "    ...dir: " .. file)
+        if pandoc.utils.stringify(evidence) == pandoc.utils.stringify(file) then 
+            fn = file 
+            qldebug("link_to_artifact_style:evidence_search", "    ...dir(fn): " .. evidence)
+
+        else
+            qldebug("link_to_artifact_style:evidence_search", "    ...Not it - file: " .. file)
+
+        end
+    end
+    if fn == nil then
+        qldebug("link_to_artifact_style", "ERROR: Evidence file not found (" .. evidence .. ")")
+    end
+
+    rtn_str = make_link(sources_path .. "/" .. sources_path_sub .. "/", evidence, evidence_pg, evidence_txt)
+    qldebug("link_to_artifact_style", "    ...custom-style: " .. rtn_str)
+
+    -- Build up the list of sources. These will be managed below under the Sources Block
+    if sources_sorted then
+        local disp = nil
+        if #sources_list == 0 then
+            table.insert(sources_list, rtn_str)
+            qldebug("link_to_artifact_style", "    ...first table insert: " .. rtn_str)
+            disp = 1
+
+        else
+            for i = 1, #sources_list do
+                if sources_list[i] == rtn_str then
+                    qldebug("link_to_artifact_style", "    ...source already exists(" .. i .. "): " .. rtn_str)
+                    disp = i
+                    break
+
+                elseif sources_list[i] >= rtn_str then
+                    qldebug("link_to_artifact_style", "    ...insert source(" .. i .. "): " .. rtn_str)
+                    table.insert(sources_list, i, rtn_str)
+                    disp = i
+                    break
+
+                else
+                    qldebug("link_to_artifact_style", "    ...CUR < EXIST(" .. i .. "): " .. rtn_str)
+
+                end
+
+            end
+
+        end
+
+        if disp == nil then
+            qldebug("link_to_artifact_style", "    ...append source: " .. rtn_str)
+            table.insert(sources_list, rtn_str)
+            disp = #sources_list
+
+        end
+
+    else
+        qldebug("link_to_artifact_style", "    ...append source: " .. rtn_str)
+        table.insert(sources_list, rtn_str)
+
+    end
+    
+    qldebug("link_to_artifact_style", "sources_list(" .. #sources_list .. "): " .. dump(sources_list))
+
+    -- Now return the new link
+    return pandoc.Span(pandoc.RawInline(raw_type,rtn_str))
+    --return pandoc.Span(rtn_str)
+end
+
+function link_to_standard(el)
+    local loc_standards_path = standards_path:gsub("\\","/")
+
+    evidence_txt_orig = pandoc.utils.stringify(el.content)
+
+    -- If quarto.doc.input_file contains standards_path, then set loc_standards_path to ""
+    -- Convert the path to contain only /. 
+    qpd = quarto.project.directory:gsub("\\","/")
+    qldebug("link_standard_style", "    ...quarto.project.directory: " .. qpd )
+    qdi = pandoc.path.directory(quarto.doc.input_file:gsub("\\","/"))
+    qldebug("link_standard_style", "    ...quarto.doc.input_file: " .. qdi ) 
+    if string.find(qdi, loc_standards_path, 1, true) then
+        loc_standards_path = ""
+    end
+    -- Now add a trailing / if loc_standards_path is not empty
+    if loc_standards_path ~= "" then
+        loc_standards_path = loc_standards_path .. "/"
+    end
+    
+    qldebug("link_standard_style", "    ...loc_standards_path: [" .. loc_standards_path .."]" )
+
+    qldebug("link_standard_style", "    ...evidence_txt_orig: [" .. evidence_txt_orig .."]" )
+
+    -- Insert leading zeros for the standard number when needed
+    evidence_txt = insert_zero(evidence_txt_orig)
+    evidence = evidence_txt
+
+    pat = " - Section: "
+    idx = string.find(evidence_txt,pat,1,true)
+    if idx ~= nil then
+        -- Sections are lowercase and use dashes for spaces in Quarto with no leading and trailing blanks
+        evidence_pg = "#" .. string.lower(string.sub(evidence,idx + string.len(pat)))
+        evidence_pg = string.gsub(evidence_pg:match("^%s*(.-)%s*$"), " ", "-")
+
+        evidence = string.sub(evidence_txt, 1, idx - 1)
+    else
+        evidence_pg = ""
+    end
+    qldebug("link_standard_style", "    ...evidence_txt: " .. evidence .. " - " .. evidence_pg .. "  -  " .. evidence_txt)
+
+    -- Check for existence of referenced standards file in the loc_standards_path directory.
+    files = pandoc.system.list_directory(quarto.project.directory .. "/" .. standards_path)
+    local fn = nil
+
+    qldebug("link_standard_style", "    ...Looking for standard file: [" .. evidence .. ".qmd]  -  [" .. evidence .. standards_core_suffix .. ".qmd]")
+
+    for _, file in ipairs(files) do 
+        qldebug("link_standard_style:evidence_search", "    ...file: [" .. file .. "]")
+        if (evidence .. ".qmd" == file) or (evidence .. standards_core_suffix .. ".qmd" == file) then 
+            fn = file 
+            qldebug("link_standard_style:evidence_search", "    ...fn: [" .. fn .. "]")
+            break
+
+        else
+            qldebug("link_standard_style:evidence_search", "    ...Not it - file: [" .. file .. "]")
+
+        end
+
+    end
+
+    if fn == nil then
+        quarto.log.error("ERROR: Standard file not found (" .. evidence .. ")")
+    else
+        evidence = fn
+        -- remove .qmd suffix
+        evidence = string.sub(evidence, 1, #evidence - 4)
+        qldebug("link_standard_style", "    ...Found evidence file [" .. evidence .. "]")
+
+    end
+
+    evidence = evidence .. ".html"
+
+    rtn_str = make_link(loc_standards_path, evidence, evidence_pg, evidence_txt)
+    qldebug("link_standard_style", "    ...rtn_str: " .. rtn_str)
+    return pandoc.RawInline(raw_type, rtn_str)
+
+end
 
 local filter = {
     traverse = 'topdown',
@@ -306,9 +549,9 @@ local filter = {
 
 
             -- Handle LINK YAML attributes
-            elseif sub_attr.id == "link_artifact_style" then
-                link_artifact_style = pandoc.utils.stringify(sub_attr.name)
-                qldebug("META", "Check Meta - link_artifact_style: " .. link_artifact_style)
+            elseif sub_attr.id == "link_to_artifact_style" then
+                link_to_artifact_style = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_style: " .. link_to_artifact_style)
 
             elseif sub_attr.id == "link_standard_style" then
                 link_standard_style = pandoc.utils.stringify(sub_attr.name)
@@ -327,6 +570,10 @@ local filter = {
                 standards_core_suffix = standards_core_suffix:gsub("{(.+)}", "%1")
                 qldebug("META", "Check Meta - standards_core_suffix: " .. standards_core_suffix)
             
+            -- Handle assessment and review path
+            elseif sub_attr.id == "sources_path" then
+                sources_path = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - sources_path: " .. sources_path)
 
             -- Handle JUDGMENT YAML attributes
             elseif sub_attr.id == "judgment_style" then
@@ -343,255 +590,54 @@ local filter = {
         return m
     end,
 
-    -- Header = function(el)
-    --   if el.level == 1 then
-    --     output_str = dump(el.content)
-
-    --     -- sources_path_sub = pandoc.utils.stringify(el.content)
-
-    --     qldebug("HEADER", "Check Header: " .. output_str)
-    --   -- elseif el.level == 2 then
-    --   --   if el.content == "Sources" then 
-    --   --   end
-    --   end
-    -- end,
-
     Span = function(el)
 
         el_attr = el.attributes 
 
         qldebug("SPAN", pandoc.utils.stringify(el.content) .. "  -  " .. dump(el_attr) )
 
-        if has_attr(el_attr, "custom-style") then
+        -- The tables that pandoc generates from the Docx to Md conversion use the data-custom-style attribute
+        --    instead of the custom-style attribute. This is a workaround to handle that.
+        if has_attr(el_attr, "custom-style") or has_attr(el_attr, "data-custom-style") then
 
+            if has_attr(el_attr, "custom-style") then
+                custom_style = pandoc.utils.stringify(el_attr["custom-style"])
+            else
+                custom_style = pandoc.utils.stringify(el_attr["data-custom-style"])
+            end
+
+            --- Handle Unit Code Style
+            --- This captures the unit code for later use
+            if custom_style == unitcode_style then
+                -- Save the unit code for later use
+                _G.unit_code = pandoc.utils.stringify(el.content)
+                -- Check for preceeding and trailing square brackets and remove them
+                if string.sub(_G.unit_code, 1, 1) == "[" then
+                    _G.unit_code = string.sub(_G.unit_code, 2, #_G.unit_code - 1)
+                end
+                qldebug("unitcode_style", "    ...unit_code: " .. _G.unit_code)
+                return pandoc.Span(pandoc.RawInline(raw_type,""))
+        
             --- Handle LINKs to artifacts
-            if pandoc.utils.stringify(el_attr["custom-style"]) == link_artifact_style then
-                qldebug("link_artifact_style", "Check Span: ")
-                qldebug("link_artifact_style", "    ...content: " .. dump(el.content))
-                qldebug("link_artifact_style", "    ...attributes: " .. dump(el.attr))
-                qldebug("link_artifact_style", "    ...custom-style: " .. pandoc.utils.stringify(el_attr["custom-style"]))
+            elseif custom_style == link_to_artifact_style then
+                qldebug("link_to_artifact_style", "Link to Artifact")
+                return link_to_artifact(el, "artifact")
 
-                evidence_txt = pandoc.utils.stringify(el.content)
-                evidence = evidence_txt .. ".pdf"
-                evidence_pg = ""
+            elseif custom_style == (link_to_artifact_style .. " - " .. link_to_artifact_assessment_style) then
+                qldebug("link_to_artifact_style", "    ...unit_code: " .. _G.unit_code .. "  [A] -  " .. pandoc.utils.stringify(el.content))
+                return link_to_artifact(el, "assessment")
 
-                -- If the evidence has a page number, and artifact_page is true, 
-                --     then construct the page number link
-                pat = " - Page "
-                idx = string.find(evidence,pat,1,true)
-                if idx ~= nil then
-                    if artifact_page then
-                        evidence_pg = "#page=" .. string.sub(evidence,idx + string.len(pat))
-                    end
+            elseif custom_style == (link_to_artifact_style .. " - " .. link_to_artifact_review_style) then
+                qldebug("link_to_artifact_style", "    ...unit_code: " .. _G.unit_code .. "  [R] -  " .. pandoc.utils.stringify(el.content))
+                return link_to_artifact(el, "review")
 
-                    evidence = string.sub(evidence, 1, idx - 1)
-
-                elseif artifact_page then
-                    --  evidence_pg = "#page=1"
-                    evidence_pg = ""
-
-                end
-
-                qldebug("link_artifact_style", "    ...evidence: " .. evidence .. "  -  " .. evidence_pg)
-
-                qldebug("link_artifact_style", "    ...dir_str: " .. quarto.project.offset .. "    -    " .. quarto.project.directory .. "    -    " .. quarto.doc.input_file) -- sources_path .. "/" .. sources_path_sub
-                dir_str = pandoc.path.make_relative(pandoc.utils.stringify(sources_path), quarto.doc.input_file) .. "/" .. sources_path_sub
-                qldebug("link_artifact_style", "    ...dir_str: " .. dir_str)
-                --quarto.utils.resolve_path()
-
-                -- Check for existence of evidence file in the document directory.
-                -- All artifacts must be PDFs.
-                files = pandoc.system.list_directory(dir_str)
-                local fn = nil
-                for _, file in ipairs(files) do 
-                    qldebug("link_artifact_style", "    ...dir: " .. file)
-                    if pandoc.utils.stringify(evidence) == pandoc.utils.stringify(file) then 
-                        fn = file 
-                        qldebug("link_artifact_style", "    ...dir(fn): " .. evidence)
-
-                    else
-                        qldebug("link_artifact_style", "    ...Not it - file: " .. file)
-
-                    end
-                end
-                if fn == nil then
-                    qldebug("link_artifact_style", "ERROR: Evidence file not found (" .. evidence .. ")")
-                end
-
-                -- Create the link to the evidence file as markdown. This will replace the former text.
-                if raw_type == "html" then 
-                    if artifact_target ~= "" then 
-                        target_str = " target=\"" .. artifact_target .. "\""
-
-                    else
-                        target_str = ""
-
-                    end
-
-                    rtn_str = "<a href=\"" .. sources_path .. "/" .. sources_path_sub .. "/" .. evidence .. evidence_pg .. "\" " .. target_str .. " >" .. evidence_txt .. "</a>"
-
-                elseif raw_type == "pdf" then
-                    rtn_str = "[" .. evidence_txt .. "](" .. sources_path .. "/" .. sources_path_sub .. "/" .. evidence .. evidence_pg .. ")"
-
-                else 
-                    rtn_str = "[" .. evidence_txt .. "](" .. sources_path .. "/" .. sources_path_sub .. "/" .. evidence .. evidence_pg .. ")"
-
-                end
-
-                -- rtn_str = "[" .. evidence_txt .. "](" .. sources_path .. "/" .. sources_path_sub .. "/" .. evidence .. evidence_pg .. ")"
-                qldebug("link_artifact_style", "    ...custom-style: " .. rtn_str)
-
-                -- Build up the list of sources. These will be managed below under the Sources Block
-                if sources_sorted then
-                    local disp = nil
-                    if #sources_list == 0 then
-                        table.insert(sources_list, rtn_str)
-                        qldebug("link_artifact_style", "    ...first table insert: " .. rtn_str)
-                        disp = 1
-
-                    else
-                        for i = 1, #sources_list do
-                            if sources_list[i] == rtn_str then
-                                qldebug("link_artifact_style", "    ...source already exists(" .. i .. "): " .. rtn_str)
-                                disp = i
-                                break
-
-                            elseif sources_list[i] >= rtn_str then
-                                qldebug("link_artifact_style", "    ...insert source(" .. i .. "): " .. rtn_str)
-                                table.insert(sources_list, i, rtn_str)
-                                disp = i
-                                break
-
-                            else
-                                qldebug("link_artifact_style", "    ...CUR < EXIST(" .. i .. "): " .. rtn_str)
-
-                            end
-
-                        end
-
-                    end
-
-                    if disp == nil then
-                        qldebug("link_artifact_style", "    ...append source: " .. rtn_str)
-                        table.insert(sources_list, rtn_str)
-                        disp = #sources_list
-
-                    end
-
-                else
-                    qldebug("link_artifact_style", "    ...append source: " .. rtn_str)
-                    table.insert(sources_list, rtn_str)
-
-                end
-                
-                qldebug("link_artifact_style", "sources_list(" .. #sources_list .. "): " .. dump(sources_list))
-
-                -- Now return the new link
-                return pandoc.Span(pandoc.RawInline(raw_type,rtn_str))
-                --return pandoc.Span(rtn_str)
-
-            --- Handle LINKs to standards
-            elseif pandoc.utils.stringify(el_attr["custom-style"]) == link_standard_style then
+                --- Handle LINKs to standards
+            elseif custom_style == link_standard_style then
                 qldebug("link_standard_style", "Link to Standards")
-
-                local loc_standards_path = standards_path:gsub("\\","/")
-
-                evidence_txt_orig = pandoc.utils.stringify(el.content)
-
-                -- If quarto.doc.input_file contains standards_path, then set loc_standards_path to ""
-                -- Convert the path to contain only /. 
-                qpd = quarto.project.directory:gsub("\\","/")
-                qldebug("link_standard_style", "    ...quarto.project.directory: " .. qpd )
-                qdi = pandoc.path.directory(quarto.doc.input_file:gsub("\\","/"))
-                qldebug("link_standard_style", "    ...quarto.doc.input_file: " .. qdi ) 
-                if string.find(qdi, loc_standards_path, 1, true) then
-                    loc_standards_path = ""
-                end
-                -- Now add a trailing / if loc_standards_path is not empty
-                if loc_standards_path ~= "" then
-                    loc_standards_path = loc_standards_path .. "/"
-                end
-                
-                qldebug("link_standard_style", "    ...loc_standards_path: [" .. loc_standards_path .."]" )
-
-                qldebug("link_standard_style", "    ...evidence_txt_orig: [" .. evidence_txt_orig .."]" )
-            
-                -- Insert leading zeros for the standard number when needed
-                evidence_txt = insert_zero(evidence_txt_orig)
-                evidence = evidence_txt
-
-                pat = " - Section: "
-                idx = string.find(evidence_txt,pat,1,true)
-                if idx ~= nil then
-                    -- Sections are lowercase and use dashes for spaces in Quarto with no leading and trailing blanks
-                    evidence_pg = "#" .. string.lower(string.sub(evidence,idx + string.len(pat)))
-                    evidence_pg = string.gsub(evidence_pg:match("^%s*(.-)%s*$"), " ", "-")
-
-                    evidence = string.sub(evidence_txt, 1, idx - 1)
-                else
-                    evidence_pg = ""
-                end
-                qldebug("link_standard_style", "    ...evidence_txt: " .. evidence .. " - " .. evidence_pg .. "  -  " .. evidence_txt)
-
-                -- Check for existence of referenced standards file in the loc_standards_path directory.
-                files = pandoc.system.list_directory(quarto.project.directory .. "/" .. standards_path)
-                local fn = nil
-
-                qldebug("link_standard_style", "    ...Looking for standard file: [" .. evidence .. ".qmd]  -  [" .. evidence .. standards_core_suffix .. ".qmd]")
-
-                for _, file in ipairs(files) do 
-                    qldebug("link_standard_style:evidence_search", "    ...file: [" .. file .. "]")
-                    if (evidence .. ".qmd" == file) or (evidence .. standards_core_suffix .. ".qmd" == file) then 
-                        fn = file 
-                        qldebug("link_standard_style:evidence_search", "    ...fn: [" .. fn .. "]")
-                        break
-
-                    -- elseif evidence .. standards_core_suffix .. ".qmd" == file then 
-                    --     fn = file 
-                    --     qldebug("link_standard_style", "    ...fn: [" .. fn .. "]")
-                    --     break
-
-                    else
-                        qldebug("link_standard_style:evidence_search", "    ...Not it - file: [" .. file .. "]")
-
-                    end
-
-                end
-
-                if fn == nil then
-                    quarto.log.error("ERROR: Standard file not found (" .. evidence .. ")")
-                else
-                    evidence = fn
-                    -- remove .qmd suffix
-                    evidence = string.sub(evidence, 1, #evidence - 4)
-                    qldebug("link_standard_style", "    ...Found evidence file [" .. evidence .. "]")
-
-                end
-
-                evidence = evidence .. ".html"
-
-                if raw_type == "html" then 
-                    if standards_target and artifact_target ~= "" then 
-                        target_str = " target=\"" .. artifact_target .. "\""
-                    else
-                        target_str = ""
-                    end
-                    --rtn_str = "<span data-qmd=\"[{{< fa regular square >}}" .. pandoc.utils.stringify(el.content) .. "](" .. pandoc.utils.stringify(el.content) .. ".qmd" .. evidence_pg .. ")\"/>"
-                    rtn_str = "<a href=\"" .. loc_standards_path .. evidence .. evidence_pg .. "\"" .. " " .. target_str .. ">" .. evidence_txt_orig .. "</a>"
-                elseif raw_type == "pdf" then
-                    -- \QuartoMarkdownBase64{<<base64-encoded-markdown-content>>}
-                    rtn_str = "[" .. evidence_txt .. "](" .. sources_path .. "/" .. sources_path_sub .. "/" .. evidence .. evidence_pg .. ")"
-                else 
-                    rtn_str = "[" .. evidence_txt .. "](" .. sources_path .. "/" .. sources_path_sub .. "/" .. evidence .. evidence_pg .. ")"
-                end
-
-                --rtn_str = "[" .. pandoc.utils.stringify(el.content) .. "](" .. pandoc.utils.stringify(el.content) .. ".qmd" .. evidence_pg .. ")"
-                qldebug("link_standard_style", "    ...rtn_str: " .. rtn_str)
-                --return pandoc.Span(pandoc.RawInline("markdown",rtn_str))
-                return pandoc.RawInline(raw_type, rtn_str)
+                return link_to_standard(el)
 
             --- Handle SOURCES Style
-            elseif pandoc.utils.stringify(el_attr["custom-style"]) == sources_style then
+            elseif custom_style == sources_style then
                 qldebug("sources_block", "Sources Block")
 
                 qldebug("sources_block", "sources_list: " .. dump(sources_list))
@@ -605,80 +651,12 @@ local filter = {
 
                 return pandoc.Span(pandoc.RawInline(raw_type, rtn_str))
 
-
-            -- Handle JUDGMENT Style
-            -- elseif pandoc.utils.stringify(el_attr["custom-style"]) == judgment_style then
-
-            --     qldebug("judgment_style", "Judgment Style")
-
-            --     rtn_str = pandoc.utils.stringify(el.content)
-
-            --     -- Replace Word character for a checked box with Bootstrap icon
-            --     --rtn_str = string.gsub( rtn_str, "☒", "&nbsp;&nbsp;&nbsp;<i class=\"fa-regular fa-square-check\" title=\"Checked box\" aria-label=\"square-check\"></i>")
-            --     -- rtn_str = string.gsub( rtn_str, "☒", "<i class=\"fa-regular fa-square-check\" title=\"Checked box\" aria-label=\"square-check\"></i>")
-            --     rtn_str = string.gsub( rtn_str, "☒", "{{< fa regular square-check title=\"Checked box\" >}}")
-
-            --     -- Replace Word character for an unchecked box with Bootstrap icon
-            --     --rtn_str = string.gsub( rtn_str, "☐", "&nbsp;&nbsp;&nbsp;<i class=\"fa-regular fa-square\" title=\"Unchecked box\" aria-label=\"square\"></i>")
-            --     -- rtn_str = string.gsub( rtn_str, "☐", "<i class=\"fa-regular fa-square\" title=\"Unchecked box\" aria-label=\"square\"></i>")
-            --     rtn_str = string.gsub( rtn_str, "☐", "{{< fa regular square title=\"Unchecked box\" >}}")
-
-            --     qldebug("judgment_style", "    ...judgment: " .. rtn_str)
-            --     --return pandoc.RawInline(raw_type, "<p>" .. rtn_str .. "</p>")
-            --     return pandoc.Span(rtn_str)
-
             end    
         end
 
         return el
-    end,
-
-    Div = function(el)
-        qldebug("DIV", "Process Div " .. dump(el))
-
-        el_attr = el.attributes 
-
-        qldebug("DIV", pandoc.utils.stringify(el.content) .. "  -  " .. dump(el_attr) )
-
-        if has_attr(el_attr, "custom-style") then
-
-            if pandoc.utils.stringify(el_attr["custom-style"]) == judgment_style then
-                qldebug("judgment_style", "Judgment DIV")
-
-                rtn_str = pandoc.utils.stringify(el.content)
-
-                -- Replace Word character for a checked box with Bootstrap icon
-                --rtn_str = string.gsub( rtn_str, "☒", "&nbsp;&nbsp;&nbsp;<i class=\"fa-regular fa-square-check\" title=\"Checked box\" aria-label=\"square-check\"></i>")
-                rtn_str = string.gsub( rtn_str, "☒", "<i class=\"fa-regular fa-check-square\" title=\"Checked box\" aria-label=\"check-square\"></i>")
-
-                -- Replace Word character for an unchecked box with Bootstrap icon
-                --rtn_str = string.gsub( rtn_str, "☐", "&nbsp;&nbsp;&nbsp;<i class=\"fa-regular fa-square\" title=\"Unchecked box\" aria-label=\"square\"></i>")
-                rtn_str = string.gsub( rtn_str, "☐", "<i class=\"fa-regular fa-square\" title=\"Unchecked box\" aria-label=\"square\"></i>")
-
-                qldebug("judgment_style", "    ...judgment: " .. rtn_str)
-                return pandoc.RawInline(raw_type, "<p>" .. rtn_str .. "</p>")
-
-            end
-
-        end
-
-    end,
+    end
 
 }
 
 return {filter}
--- return {
---   {
---     Meta = Meta
---   },
---   {
---     Span = Span,
---     Header = Header,
---   },
---   -- {
---   --   Para = Para,
---   -- },
---   {
---     Pandoc = Pandoc
---   }
--- }

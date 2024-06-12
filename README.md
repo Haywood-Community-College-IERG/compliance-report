@@ -28,6 +28,37 @@ quarto add quarto-ext/fontawesome
 
 ### YAML Changes
 
+#### Logo
+
+\_quarto-website.yml
+
+```
+  navbar:
+    logo: images/GenericLogo.png
+```
+![Logo](screenshots/websitelogo.png)
+
+\_quarto-pdf.yml
+
+```
+book:
+  title: "5th-Year Reaffirmation"
+  author: "Author"
+  sidebar:
+    style: docked
+    logo: images/GenericLogo.png
+```
+
+#### Favicon (website icon)
+
+\_quarto-website.yml
+
+```
+website:
+  title: "5th-Year Reaffirmation"
+  favicon: images/Mountain.png
+```
+![Favicon](screenshots/favicon.png)
 
 ### CSS and SCSS Changes
 
@@ -35,9 +66,91 @@ Change the colors to colors that align with your school's brand using the guide 
 
 #### Changes to `custom.scss`
 
-The changes go here with screenshots to help user understand exactly which portion is being changed.
+**Resources**
+- [Quarto: HTML Theming](https://quarto.org/docs/output-formats/html-themes.html)
+- [HTML Theming: Dark Mode](https://quarto.org/docs/output-formats/html-themes.html#dark-mode)
+- [More About Quarto Themes](https://quarto.org/docs/output-formats/html-themes-more.html)
+- [Github: Bootstrap Themes](https://github.com/quarto-dev/quarto-cli/tree/main/src/resources/formats/html/bootstrap/themes)
 
-#### Changes tp `custom.css`
+**Comments**
+- Entire line: `// Enter comment here`
+- In-line: `/* Enter comment here */`
+
+##### Change custom colors
+
+```
+//Enter your custom colors here using hex color codes
+$custom1: #7030A0 !default; // Dark Purple
+$custom2: #9999FF !default; // Light Purple
+$custom3: #00FFFF !default; // Aqua
+```
+![Custom Colors](screenshots\customcolors.png)
+
+###### Custom1
+
+```
+$dark:          $custom1 !default;
+```
+![Dark](screenshots\dark.png)
+
+```
+ span[data-custom-style="Judgment"] {
+   color: $custom1;
+ }
+```
+![Judgment](screenshots\judgment.png)
+
+
+###### Custom2
+
+```
+// Change the link text color here
+
+$link-color:                $custom2 !default;
+```
+![Link Text](screenshots\linktext.png)
+
+```
+$sidebar-hover-color:               $custom2 !default; /* changes the font color of the item that is hovered over */
+```
+![Sidebar Hover](screenshots\sidebarhover.png)
+
+###### Custom3
+
+```
+$navbar-hl:                         $custom3 !default; /* changes the font color of the selected item */
+```
+![Navbar Highlight](screenshots\navbarhighlight.png)
+
+```
+$sidebar-active-color:               $custom3 !default; /* changes the font color of the selected item */
+```
+![Sidebar Active](screenshots\sidebaractive.png)
+
+##### Adjust Logo Positioning
+
+```
+// Change the navbar Logo's position
+
+.navbar-brand {
+  max-height: unset;
+  margin: -1px; /* changes the margin around the logo: smaller# = smaller margin & larger# = larger margin */
+  margin-right: 10px; /* moves the section titles to the right of the title: smaller# = moves left & larger# = moves right */
+}
+
+.navbar-logo {
+  max-height: unset;
+  max-width: unset;
+  height: unset;
+  width: 250px; /* changes the width of the logo: smaller# = smaller width & larger# = larger width */
+  margin-top: -10px; /* changes the margin at the top of the logo: smaller# = logo moves up & larger# = logo moves down */
+  margin-left: -19px; /* changes the margin to the left of the logo: smaller# = logo moves left & larger# = logo moves right */
+  margin-bottom: -20px; /* changes the margin to the right of logo: smaller# = logo moves down & larger# = logo moves up */
+}
+```
+
+
+#### Changes to `custom.css`
 
 The changes go here with screenshots to help user understand exactly which portion is being changed.
 

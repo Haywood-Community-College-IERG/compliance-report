@@ -1,6 +1,8 @@
 /*-- scss:defaults --*/
 
-$theme: "HCC_custom" !default;
+$theme: "custom" !default;
+
+// Adapted from bootstrap theme: sandstone
 
 //
 // Color system
@@ -29,13 +31,10 @@ $green:   #93c54b !default;
 $teal:    #20c997 !default;
 $cyan:    #29abe0 !default;
 
-//HCC Colors
-
-$darkgreen:   #2A5239 !default;
-$lightgreen:  #799B3E !default;
-$grey:        #63666A !default;
-$tan:         #D9BD80 !default;
-$darkpink:    #9C006A !default;
+//Enter your custom colors here using hex color codes
+$custom1: #7030A0 !default; // Dark Purple
+$custom2: #9999FF!default; // Light Purple
+$custom3: #00FFFF !default; // Aqua
 
 $primary:       $blue !default;
 $secondary:     $gray-600 !default;
@@ -44,17 +43,17 @@ $info:          $cyan !default;
 $warning:       $orange !default;
 $danger:        $red !default;
 $light:         $gray-200 !default;
-$dark:          $darkgreen !default; /* $gray-800 */
+$dark:          $custom1 !default;
 
 $min-contrast-ratio:   2 !default;
 
-// Body
+// Change the body text color here
 
-$body-color:                $black !default; /* $gray-800 */
+$body-color:                $black !default;
 
-// Links
+// Change the link text color here
 
-$link-color:                $lightgreen !default;
+$link-color:                $custom2 !default;
 
 // Fonts
 
@@ -80,20 +79,16 @@ $nav-tabs-link-active-bg:           $white !default;
 $nav-pills-link-active-color:       $gray-600 !default;
 $nav-pills-link-active-bg:          $gray-200 !default;
 
-// Navbar
+// Change the navbar font color here
 
-$navbar-fg:                         $white !default; 
-$navbar-hl:                         $tan !default;
+$navbar-fg:                         $white !default; /* changes the font color of all the items */
+$navbar-hl:                         $custom3 !default; /* changes the font color of the selected item */
 
-//.navbar li.nav-item a.nav-link span{
-//  color: $white; /* Home Requirements QEP Documents */
-//}
+// Change the sidebar font color here
 
-// Sidebar
-
-$sidebar-fg:                        $white !default; 
-$sidebar-active-color:              $tan !default;
-$sidebar-hover-color:               $lightgreen !default;
+$sidebar-fg:                        $white !default; /* changes the font color of all the items */
+$sidebar-active-color:              $orange !default; /* changes the font color of the selected item */
+$sidebar-hover-color:               $custom2 !default; /* changes the font color of the item that is hovered over */
 
 // Pagination
 
@@ -145,7 +140,7 @@ $list-group-action-active-bg:       $gray-300 !default;
 
 $breadcrumb-padding-y:              .375rem !default;
 $breadcrumb-padding-x:              .75rem !default;
-$breadcrumb-bg:                     $gray-700 !default;
+$breadcrumb-bg:                     $gray-700 !default; /* changes the breadcrumb background */
 $breadcrumb-border-radius:          .25rem !default;
 
 // Close
@@ -168,7 +163,7 @@ $web-font-path: "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;70
 
 // Navbar
 
-.HCC_custom {
+.custom {
   font-size: 13px;
   font-weight: 500;
   line-height: 22px;
@@ -177,7 +172,7 @@ $web-font-path: "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;70
 
 .navbar {
   .nav-link {
-    @extend .HCC_custom;
+    @extend .custom;
   }
 
   &-form input,
@@ -186,28 +181,28 @@ $web-font-path: "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;70
   }
 }
 
-// Navbar Logo Positioning
+// Change the navbar Logo's position
 
 .navbar-brand {
   max-height: unset;
-  margin: -1px;
-  margin-right: 10px;
+  margin: -1px; /* changes the margin around the logo: smaller# = smaller margin & larger# = larger margin */
+  margin-right: 10px; /* moves the section titles to the right of the title: smaller# = moves left & larger# = moves right */
 }
 
 .navbar-logo {
   max-height: unset;
   max-width: unset;
   height: unset;
-  width: 200px;
-  margin-top: -20px;
-  margin-left: -20px;
-  margin-bottom: -20px;
+  width: 250px; /* changes the width of the logo: smaller# = smaller width & larger# = larger width */
+  margin-top: -10px; /* changes the margin at the top of the logo: smaller# = logo moves up & larger# = logo moves down */
+  margin-left: -19px; /* changes the margin to the left of the logo: smaller# = logo moves left & larger# = logo moves right */
+  margin-bottom: -20px; /* changes the margin to the right of logo: smaller# = logo moves down & larger# = logo moves up */
 }
 
 // Buttons
 
 .btn {
-  @extend .HCC_custom;
+  @extend .custom;
 
   &:hover {
     border-color: transparent; 
@@ -242,7 +237,7 @@ input,
 
 .nav-tabs {
   .nav-link {
-    @extend .HCC_custom;
+    @extend .custom;
     background-color: $gray-200;
     border-color: $gray-300;
   }
@@ -264,7 +259,7 @@ input,
 
 .nav-pills {
   .nav-link {
-    @extend .HCC_custom;
+    @extend .custom;
     color: $gray-600;
     border: 1px solid transparent;
   }
@@ -286,12 +281,12 @@ input,
 
 
 .breadcrumb {
-  @extend .HCC_custom;
+  @extend .custom;
   border: 1px solid $gray-300;
 }
 
 .pagination {
-  @extend .HCC_custom;
+  @extend .custom;
 
   a:hover {
     text-decoration: none;
@@ -300,7 +295,7 @@ input,
 
 .dropdown-menu {
   .dropdown-item {
-    @extend .HCC_custom;
+    @extend .custom;
   }
 }
 
@@ -393,7 +388,7 @@ input,
 }
 
 .tooltip {
-  @extend .HCC_custom;
+  @extend .custom;
 }
 
 // Containers
@@ -406,7 +401,7 @@ input,
   }
 }
 
-// Custom Styles
+// Change font color of custom styles created in source word documents
 
 div[data-custom-style="Subtitle"] {
    color: $gray-700;
@@ -415,27 +410,9 @@ div[data-custom-style="Subtitle"] {
 
  div[data-custom-style="Abstract"] {
    color: $gray-700;
-//   background-color: $gray-400;
-//   border: 2px solid $darkpink;
  }
 
  span[data-custom-style="Judgment"] {
-   color: $darkgreen;
+   color: $custom1;
  }
 
-// div[data-custom-style="Body Text"] {
-//   color: $black;
-// }
-
-//div.sidebar-item-container:has(a:active) {
-//  background-color: $darkpink;
-//  border: 2px solid $darkpink;
-//  color: $white;
-//}
-
-//div.sidebar-item-container:hover {
-  /* Apply your desired styles here */
-//  background-color: $darkgreen;
-//  border: 2px solid $darkpink;
-//  color: $white;
-//}

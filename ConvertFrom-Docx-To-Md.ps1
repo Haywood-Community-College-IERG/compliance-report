@@ -46,13 +46,13 @@ $stds = @(#"Standard 05.4",
           #"Standard 06.1 (CR)",
           "Standard 06.2",
           #"Standard 08.1 (CR)",
-          #"Standard 08.2",
+          "Standard 08.2",
           #"Standard 09.1 (CR)",
           #"Standard 09.2 (CR)",
           #"Standard 10.2",
           #"Standard 10.3",
           #"Standard 10.5",
-          "Standard 10.6"
+          #"Standard 10.6",
           #"Standard 10.7",
           #"Standard 10.9",
           #"Standard 12.1 (CR)",
@@ -61,21 +61,22 @@ $stds = @(#"Standard 05.4",
           #"Standard 13.7",
           #"Standard 13.8",
           #"Standard 14.1",
-          #"Standard 14.3",
+          "Standard 14.3"
           #"Standard 14.4"
           )
 
 $qep_chan = "QEP Impact Report"
 
 $others = @("Welcome - Website", 
-            "Welcome - PDF", 
+            "Welcome - PDF",
             "Overview",
             "Leadership", 
             "Requirements",
             "Signatures", 
             "Summary", 
             "Support",
-            "Documents")
+            "Documents"
+            )
 
 $others_chan = "Other Supporting Documents"
 
@@ -153,7 +154,9 @@ function Convert-Docx {
 
     Write-Host "...converting $std_docx_path to $std_md_path with images in $std_img_path"
     # Call pandoc to convert the docx file to markdown
-    Convert-Pandoc -inp "$std_docx_path" -output $std_md_path -from "docx+styles" -to "markdown" -extractmedia "'$std_img_path'"
+    # Must include multi-line tables and remove grid tables to ensure proper conversion of tables and to 
+    #     allow custom-styles within tables 
+    Convert-Pandoc -inp "$std_docx_path" -output $std_md_path -from "docx+styles" -to "markdown+multiline_tables-grid_tables" -extractmedia "'$std_img_path'"
 
     # In the markdown file, replace all instances of ☒ with 
     #     {{< fa regular square-check title="Checked box" >}} and all instances

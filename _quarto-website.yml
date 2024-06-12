@@ -22,7 +22,7 @@ filters:
 
 website:
   title: "5th-Year Reaffirmation"
-  favicon: images/Clyde.png
+  favicon: images/Mountain.png
   page-navigation: true
   # reader-mode: true
   back-to-top-navigation: true 
@@ -85,7 +85,7 @@ website:
         - documents.qmd
 
   navbar:
-    logo: images/HCC Logo (White).png
+    logo: images/GenericLogo.png
     background: dark
     left: 
       - text: "Home"
@@ -107,7 +107,7 @@ website:
         
 format:
   html:
-    theme: HCC_custom.scss
+    theme: custom.scss
     #css: HCC_custom.css
     toc: true
     toc-expand: true 
