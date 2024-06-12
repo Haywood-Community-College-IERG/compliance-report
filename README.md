@@ -30,7 +30,7 @@ quarto add quarto-ext/fontawesome
 
 #### Logo
 
-\_quarto-website.yml
+_quarto-website.yml
 
 ```
   navbar:
@@ -38,7 +38,7 @@ quarto add quarto-ext/fontawesome
 ```
 ![Logo](screenshots/websitelogo.png)
 
-\_quarto-pdf.yml
+_quarto-pdf.yml
 
 ```
 book:
@@ -51,7 +51,7 @@ book:
 
 #### Favicon (website icon)
 
-\_quarto-website.yml
+_quarto-website.yml
 
 ```
 website:
@@ -84,21 +84,23 @@ $custom1: #7030A0 !default; // Dark Purple
 $custom2: #9999FF !default; // Light Purple
 $custom3: #00FFFF !default; // Aqua
 ```
-![Custom Colors](screenshots\customcolors.png)
+![Custom C
+olors](screenshots/customcolors.png)
 
 ###### Custom1
 
 ```
 $dark:          $custom1 !default;
 ```
-![Dark](screenshots\dark.png)
+![Dark](screenshots/dark.png)
 
 ```
  span[data-custom-style="Judgment"] {
    color: $custom1;
  }
 ```
-![Judgment](screenshots\judgment.png)
+
+![Judgment](screenshots/judgment.png)
 
 
 ###### Custom2
@@ -107,25 +109,30 @@ $dark:          $custom1 !default;
 // Change the link text color here
 
 $link-color:                $custom2 !default;
-```
-![Link Text](screenshots\linktext.png)
 
 ```
-$sidebar-hover-color:               $custom2 !default; /* changes the font color of the item that is hovered over */
+![Link Text](screenshots/linktext.png)
+
 ```
-![Sidebar Hover](screenshots\sidebarhover.png)
+
+$sidebar-hover-color:               $custom2 !default; /* changes the font color of the item that is hovered over */
+
+```
+![Sidebar Hover](screenshots/sidebarhover.png)
 
 ###### Custom3
 
 ```
 $navbar-hl:                         $custom3 !default; /* changes the font color of the selected item */
 ```
-![Navbar Highlight](screenshots\navbarhighlight.png)
+
+![Navbar Highlight](screenshots/navbarhighlight.png)
 
 ```
 $sidebar-active-color:               $custom3 !default; /* changes the font color of the selected item */
 ```
-![Sidebar Active](screenshots\sidebaractive.png)
+
+![Sidebar Active](screenshots/sidebaractive.png)
 
 ##### Adjust Logo Positioning
 
