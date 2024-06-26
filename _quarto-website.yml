@@ -6,7 +6,6 @@ project:
     - index.qmd
     - requirements.qmd
     - requirements/*.qmd
-    # - requirements/Standard 14.3.qmd
     - QEP Impact Report.qmd
     - support.qmd
     - overview.qmd
@@ -31,8 +30,8 @@ website:
     # type: textbox
   page-footer: 
     left: 
-      - text: Haywood Community College Home Page
-        href: https://www.haywood.edu/
+      - text: College Home Page
+        href: https://www.college.edu/
         target: _blank
     right:
       - text: Help
@@ -102,13 +101,12 @@ website:
         text: Help
       - icon: file-pdf
         text: PDF 
-        href: ../_book/HCC-5th-Year-Reaffirmation.pdf
+        href: ../_book/5th-Year-Reaffirmation.pdf
         target: _blank
         
 format:
   html:
     theme: custom.scss
-    #css: HCC_custom.css
     toc: true
     toc-expand: true 
     quarto-required: ">=1.4.0"

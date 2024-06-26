@@ -4,15 +4,26 @@ local List = require 'pandoc.List'
 local site_path = "_site"
 
 local yaml_tagname = "accreditation"
+local debug = "warning" -- can be blank or "error"
+
+local root_dir = ""
+local file_being_processed = ""
+local file_being_processed_core = ""
+
+local chapter_heading = ""
+local chapter_heading_zero = ""
 
 local artifact_target = "_blank"
 local artifact_page = false
 
 local sources_style = "Sources"
 local sources_header = "Sources"
-local sources_path = "../documents"
+--local sources_path = "../documents"
+local sources_path = "documents"
 local sources_path_sub = "" 
+local sources_path_core_sub = "" 
 local sources_sorted = true
+local sources_as_filename = false
 
 local standards_path = "requirements"
 local standards_target = false
@@ -30,45 +41,114 @@ local link_to_artifact_review_style = "Review"
 local link_to_artifact_review_sep = "_"
 local link_to_artifact_review_suffix = "_PR"
 
+local link_to_artifact_job_prefix = "Job Description"
+local link_to_artifact_job_sep = " - "
+local link_to_artifact_job_suffix = ""
+
+local link_to_artifact_resume_prefix = "Resume"
+local link_to_artifact_resume_sep = " - "
+local link_to_artifact_resume_suffix = ""
+
 local link_standard_style = "Link to Standard"
+
+local hyperlink_style = "Hyperlink"
+local hyperlink_prefix = ""
 
 local judgment_style = "Judgment"
 
 local sources_html_hdr = '<ul type="1">'
-local sources_html_ftr = '</ul>'
 local sources_html_start = '<li>'
 local sources_html_end = '</li>'
+local sources_html_ftr = '</ul>'
 
-local sources_pdf_hdr = '<ol type="1">'
-local sources_pdf_ftr = '</ol>'
-local sources_pdf_start = '<li>'
-local sources_pdf_end = '</li>'
+--local sources_pdf_hdr = '<ul type="1">' -- '\n\n' -- '<ol type="1">'
+--local sources_pdf_start = '<li>' -- ' * ' -- '<li>'
+--local sources_pdf_end = '</li>' -- '\n' -- '</li>'
+--local sources_pdf_ftr = '</ul>' -- '\n\n' -- '</ol>'
 
-local li_start = ""
-local li_end = ""
-local li_hdr = ""
-local li_ftr = ""
-local raw_type = "html"
+-- local sources_pdf_hdr = '\n\n' -- '<ol type="1">'
+-- local sources_pdf_start = ' * ' -- '<li>'
+-- local sources_pdf_end = '\n' -- '</li>'
+-- local sources_pdf_ftr = '\n\n' -- '</ol>'
+
+local sources_pdf_hdr = '\n\\begin{enumerate}\n\\def\\labelenumi{\\arabic{enumi}.}\n\\itemsep1pt\\parskip0pt\\parsep0pt\n'
+local sources_pdf_start = '\\item\n' -- '<li>'
+local sources_pdf_end = '\n' -- '</li>'
+local sources_pdf_ftr = '\\end{enumerate}\n\n' -- '</ol>'
+
+local li_hdr = '<ul type="1">'
+local li_start = '<li>'
+local li_end = '</li>'
+local li_ftr = '</ul>'
+--local li_hdr = '\n\n'
+--local li_start = " ##. "
+--local li_end = '\n'
+--local li_ftr = '\n\n'
+local raw_type = ""
 
 local sources_list = {}
 
 local trace_options = { "link_to_artifact_style",
                         --"link_to_artifact_style:evidence_search",
+                        --"link_to_artifact_style:sources_list",
                         "link_standard_style", 
-                        -- "make_link",
+                        "make_link",
+                        "hyperlink_style",
+                        --"add_to_sources",
                         "unitcode_style",
+                        --"isfile",
+                        --"isdir",
                         -- "link_standard_style:evidence_search"
-                        -- "sources_block",
+                        "sources_block",
                         -- "judgment_style",
                         -- "sources_style",
                         -- "DIV",
+                        "LINK",
                         "SPAN",
+                        "IMAGE",
                         --"STR","PLAIN",
-                        -- "HEADER",
-                        -- "META",
+                        "HEADER",
+                        "META",
                         -- "IZ",
+                        --"DUMP",
                      }
+                      
+local function qldebug(opt, msg)
+    if contains(trace_options, opt) and debug == "warning" then
+        quarto.log.debug(yaml_tagname .. ": [" .. opt .. "]: " .. msg)
+    end
+end
+                    
+local function qlerror(opt, msg)
+    if contains(trace_options, opt) and (debug == "warning" or debug == "error") then
+        qldebug(opt, "(ERROR) " .. msg)
+    end
+end
 
+function isfile(file)
+    -- some error codes:
+    -- 13 : EACCES - Permission denied
+    -- 17 : EEXIST - File exists
+    -- 20	: ENOTDIR - Not a directory
+    -- 21	: EISDIR - Is a directory
+    --
+    qldebug("isfile", "    ...file: " .. file)
+    local isok, errstr, errcode = os.rename(file, file)
+    if isok == nil then
+        if errcode == 13 then 
+            -- Permission denied, but it exists
+            return true
+        end
+        return false
+    end
+    return true
+end
+
+function isdir(dirpath)
+    qldebug("isdir", "    ...dirpath: " .. dirpath)
+    return isfile(dirpath .. "/")
+end
+                      
 function contains(tbl, str)
     for _, value in pairs(tbl) do
         if value == str then
@@ -76,12 +156,6 @@ function contains(tbl, str)
         end
     end
     return false
-end
-                      
-local function qldebug(opt, msg)
-    if contains(trace_options, opt) then
-        quarto.log.debug(yaml_tagname .. ": [" .. opt .. "]: " .. msg)
-    end
 end
 
 -- From https://github.com/pandoc/lua-filters/blob/master/scholarly-metadata/scholarly-metadata.lua
@@ -104,6 +178,7 @@ local type = pandoc.utils.type or metatype
 -- From https://github.com/nmfs-opensci/quarto_titlepages
 local function dump(o)
     if type(o) == 'table' then
+        qldebug("DUMP", "    ...table")
         local s = '{ '
         for k,v in pairs(o) do
             if type(k) ~= 'number' then k = '"'..k..'"' end
@@ -111,6 +186,7 @@ local function dump(o)
         end
         return s .. '} '
     else
+        qldebug("DUMP", "    ...string")
         return tostring(o)
     end
 end
@@ -264,6 +340,9 @@ function make_link(path, evidence, evidence_pg, evidence_txt)
     qldebug("make_link", "    ...evidence: " .. evidence)
     qldebug("make_link", "    ...evidence_pg: " .. evidence_pg)
     qldebug("make_link", "    ...evidence_txt: " .. evidence_txt)
+    local rtn_str = ""
+
+    evidence_txt = evidence_txt:gsub("%%20", " ")
 
     -- Create the link to the evidence file as markdown. This will replace the former text.
     if raw_type == "html" then 
@@ -286,7 +365,56 @@ function make_link(path, evidence, evidence_pg, evidence_txt)
 
     end
 
+    qldebug("make_link", "    ...rtn_str: " .. rtn_str)
     return rtn_str
+    
+end
+
+function add_to_sources(sources_list, src)
+    qldebug("add_to_sources", "Add to sources: " .. src)
+
+    -- Build up the list of sources. These will be managed below under the Sources Block
+    if sources_sorted then
+        local disp = nil
+        if #sources_list == 0 then
+            table.insert(sources_list, src)
+            qldebug("add_to_sources", "    ...first table insert: " .. src)
+            disp = 1
+
+        else
+            for i = 1, #sources_list do
+                if sources_list[i] == src then
+                    qldebug("add_to_sources", "    ...source already exists(" .. i .. "): " .. src)
+                    disp = i
+                    break
+
+                elseif sources_list[i] >= rtn_str then
+                    qldebug("add_to_sources", "    ...insert source(" .. i .. "): " .. src)
+                    table.insert(sources_list, i, src)
+                    disp = i
+                    break
+
+                else
+                    qldebug("add_to_sources", "    ...CUR < EXIST(" .. i .. "): " .. src)
+
+                end
+
+            end
+
+        end
+
+        if disp == nil then
+            qldebug("add_to_sources", "    ...append source: " .. src)
+            table.insert(sources_list, src)
+            disp = #sources_list
+
+        end
+
+    else
+        qldebug("add_to_sources", "    ...append source: " .. src)
+        table.insert(sources_list, src)
+
+    end
     
 end
 
@@ -301,14 +429,50 @@ function link_to_artifact(el, artifact_type)
     if artifact_type == "artifact" then
         evidence_txt = pandoc.utils.stringify(el.content)
         evidence = evidence_txt .. extension
+        sources_txt = evidence_txt
     elseif artifact_type == "assessment" then
         evidence_txt = pandoc.utils.stringify(el.content)
         evidence = _G.unit_code .. link_to_artifact_assessment_sep .. evidence_txt .. link_to_artifact_assessment_suffix .. extension
+        sources_txt = _G.unit_code .. link_to_artifact_assessment_sep .. evidence_txt .. link_to_artifact_assessment_suffix
     elseif artifact_type == "review" then
         evidence_txt = pandoc.utils.stringify(el.content)
         evidence = _G.unit_code .. link_to_artifact_review_sep .. evidence_txt .. link_to_artifact_review_suffix .. extension
+        sources_txt = _G.unit_code .. link_to_artifact_review_sep .. evidence_txt .. link_to_artifact_review_suffix
+    elseif artifact_type == "job" then
+        evidence_txt = pandoc.utils.stringify(el.content)
+        evidence_txt = evidence_txt:gsub("[ÂÄì]", " ")
+        qldebug("link_to_artifact_style", "    [J]...evidence_txt: " .. evidence_txt)
+        if link_to_artifact_job_prefix ~= "" then
+            pref = link_to_artifact_job_prefix .. link_to_artifact_job_sep
+        else 
+            pref = ""
+        end
+        if link_to_artifact_job_suffix ~= "" then
+            suf = link_to_artifact_job_sep .. link_to_artifact_job_suffix
+        else
+            suf = ""
+        end
+        evidence = pref .. evidence_txt .. suf .. extension
+        sources_txt = evidence_txt
+    elseif artifact_type == "resume" then
+        evidence_txt = pandoc.utils.stringify(el.content)
+        evidence_txt = evidence_txt:gsub("[ÂÄì]", " ")
+        qldebug("link_to_artifact_style", "    [R]...evidence_txt: " .. evidence_txt)
+        qldebug("link_to_artifact_style", "    [R]...evidence_txt: " .. dump(evidence_txt))
+        if link_to_artifact_resume_prefix ~= "" then
+            pref = link_to_artifact_resume_prefix .. link_to_artifact_resume_sep
+        else
+            pref = ""
+        end
+        if link_to_artifact_resume_suffix ~= "" then
+            suf = link_to_artifact_resume_sep .. link_to_artifact_resume_suffix
+        else
+            suf = ""
+        end
+        evidence = pref .. evidence_txt .. suf .. extension
+        sources_txt = evidence_txt
     else
-        qldebug("link_to_artifact_style", "ERROR: Unknown artifact type (" .. artifact_type .. ")")
+        qlerror("link_to_artifact_style", "Unknown artifact type (" .. artifact_type .. ")")
         return el
     end
     
@@ -332,14 +496,23 @@ function link_to_artifact(el, artifact_type)
 
     end
 
-    qldebug("link_to_artifact_style", "    ...evidence: " .. evidence .. "  -  " .. evidence_pg)
+    qldebug("link_to_artifact_style", "    ...evidence: " .. evidence_txt .. " - " .. evidence .. "  -  " .. evidence_pg)
 
-    qldebug("link_to_artifact_style", "    ...dir_str: " .. quarto.project.offset .. "    -    " .. quarto.project.directory .. "    -    " .. quarto.doc.input_file) -- sources_path .. "/" .. sources_path_sub
-    dir_str = pandoc.path.make_relative(pandoc.utils.stringify(sources_path), quarto.doc.input_file) .. "/" .. sources_path_sub
+    --qldebug("link_to_artifact_style", "    ...dir_str: " .. quarto.project.offset .. "    -    " .. quarto.project.directory .. "    -    " .. quarto.doc.input_file) -- sources_path .. "/" .. sources_path_sub
+    --dir_str = pandoc.path.normalize( root_dir .. "/".. pandoc.path.make_relative(pandoc.utils.stringify(sources_path), quarto.doc.input_file) .. "/" .. sources_path_sub )
+    dir_str = pandoc.path.normalize( root_dir .. "/".. sources_path .. "/" .. sources_path_sub )
     qldebug("link_to_artifact_style", "    ...dir_str: " .. dir_str)
 
     -- Check for existence of evidence file in the document directory.
     -- All artifacts must be PDFs.
+    if (not isdir(dir_str)) then
+        qlerror("link_to_artifact_style", "Directory not found (" .. dir_str .. ")")
+        dir_str = pandoc.path.normalize( root_dir .. "/".. sources_path .. "/" .. sources_path_core_sub )
+        qlerror("link_to_artifact_style", "    ... (" .. dir_str .. ")")
+        if (not isdir(dir_str)) then
+            qlerror("link_to_artifact_style", "Directory not found - Trying (" .. dir_str .. ")")
+        end
+    end
     files = pandoc.system.list_directory(dir_str)
     local fn = nil
     for _, file in ipairs(files) do 
@@ -354,57 +527,32 @@ function link_to_artifact(el, artifact_type)
         end
     end
     if fn == nil then
-        qldebug("link_to_artifact_style", "ERROR: Evidence file not found (" .. evidence .. ")")
+        qlerror("link_to_artifact_style", "Evidence file not found (" .. evidence .. ")")
     end
 
-    rtn_str = make_link(sources_path .. "/" .. sources_path_sub .. "/", evidence, evidence_pg, evidence_txt)
-    qldebug("link_to_artifact_style", "    ...custom-style: " .. rtn_str)
-
-    -- Build up the list of sources. These will be managed below under the Sources Block
-    if sources_sorted then
-        local disp = nil
-        if #sources_list == 0 then
-            table.insert(sources_list, rtn_str)
-            qldebug("link_to_artifact_style", "    ...first table insert: " .. rtn_str)
-            disp = 1
-
-        else
-            for i = 1, #sources_list do
-                if sources_list[i] == rtn_str then
-                    qldebug("link_to_artifact_style", "    ...source already exists(" .. i .. "): " .. rtn_str)
-                    disp = i
-                    break
-
-                elseif sources_list[i] >= rtn_str then
-                    qldebug("link_to_artifact_style", "    ...insert source(" .. i .. "): " .. rtn_str)
-                    table.insert(sources_list, i, rtn_str)
-                    disp = i
-                    break
-
-                else
-                    qldebug("link_to_artifact_style", "    ...CUR < EXIST(" .. i .. "): " .. rtn_str)
-
-                end
-
-            end
-
-        end
-
-        if disp == nil then
-            qldebug("link_to_artifact_style", "    ...append source: " .. rtn_str)
-            table.insert(sources_list, rtn_str)
-            disp = #sources_list
-
-        end
-
+    qldebug("link_to_artifact_style", "    ...evidence: " .. evidence_txt .. " - " .. evidence .. "  -  " .. evidence_pg)
+    if sources_as_filename then
+        qldebug("link_to_artifact_style", "    ...TEST1: " .. evidence)
+        content = evidence
     else
-        qldebug("link_to_artifact_style", "    ...append source: " .. rtn_str)
-        table.insert(sources_list, rtn_str)
-
+        qldebug("link_to_artifact_style", "    ...TEST2: " .. sources_txt)
+        content = sources_txt
     end
-    
-    qldebug("link_to_artifact_style", "sources_list(" .. #sources_list .. "): " .. dump(sources_list))
 
+    qldebug("link_to_artifact_style", "    ...content: " .. content)
+    rtn_str = make_link(sources_path .. "/" .. sources_path_sub .. "/", evidence, evidence_pg, evidence_txt)
+    rtn_str_srcs = make_link(sources_path .. "/" .. sources_path_sub .. "/", evidence, evidence_pg, content)
+    qldebug("link_to_artifact_style", "    ...rtn_str: " .. rtn_str)
+    qldebug("link_to_artifact_style", "    ...rtn_str_srcs: " .. rtn_str_srcs)
+
+    -- Add the evidence to the sources list
+    add_to_sources(sources_list, rtn_str_srcs)
+    qldebug("link_to_artifact_style:sources_list", "sources_list(" .. #sources_list .. "): " .. dump(sources_list))
+
+    local loc_raw_type = raw_type
+    if loc_raw_type == "pdf" then
+        loc_raw_type = "markdown"
+    end
     -- Now return the new link
     return pandoc.Span(pandoc.RawInline(raw_type,rtn_str))
     --return pandoc.Span(rtn_str)
@@ -434,7 +582,7 @@ function link_to_standard(el)
     qldebug("link_standard_style", "    ...evidence_txt_orig: [" .. evidence_txt_orig .."]" )
 
     -- Insert leading zeros for the standard number when needed
-    evidence_txt = insert_zero(evidence_txt_orig)
+    evidence_txt = string.gsub(insert_zero(evidence_txt_orig), "–", "-")
     evidence = evidence_txt
 
     pat = " - Section: "
@@ -471,7 +619,7 @@ function link_to_standard(el)
     end
 
     if fn == nil then
-        quarto.log.error("ERROR: Standard file not found (" .. evidence .. ")")
+        qlerror("link_standard_style", "Standard file not found (" .. evidence .. ")")
     else
         evidence = fn
         -- remove .qmd suffix
@@ -498,22 +646,29 @@ local filter = {
             li_hdr = sources_html_hdr
             li_ftr = sources_html_ftr
             raw_type = "html"
+            qldebug("META", "Check Meta - html")
         elseif quarto.doc.is_format("pdf") then
             li_start = sources_pdf_start
             li_end = sources_pdf_end
             li_hdr = sources_pdf_hdr
             li_ftr = sources_pdf_ftr
             raw_type = "pdf"
+            qldebug("META", "Check Meta - pdf")
         else
-            li_start = " 1. "
-            li_end = "\n\n"
-            li_hdr = ""
-            li_ftr = ""
+            qldebug("META", "Check Meta - unknown")
         end        
 
         -- qldebug("META", "Check Meta: " .. dump(m))
         local accreditation_meta = ensure_list(m[yaml_tagname]):map(to_named_object)
 
+        root_dir = quarto.project.directory
+        file_being_processed = pandoc.path.filename(quarto.doc.input_file)
+        --qldebug("META", "File Details - input_file            : " .. quarto.doc.input_file)
+        qldebug("META", "File Details - file_being_processed    : " .. file_being_processed)
+        qldebug("META", "File Details - root_dir                : " .. root_dir)
+        --qldebug("META", "File Details - quarto.project.offset   : " .. quarto.project.offset)
+        --qldebug("META", "File Details - quarto.project.directory: " .. quarto.project.directory)
+        
         sources_path_sub, _ = pandoc.path.split_extension(pandoc.path.filename(quarto.doc.input_file))
         qldebug("META", "Check Meta - fn (sources_path_sub): " .. sources_path_sub)
 
@@ -547,6 +702,9 @@ local filter = {
                 sources_sorted = (pandoc.utils.stringify(sub_attr.name) == "true")
                 qldebug("META", "Check Meta - sources path: " .. pandoc.utils.stringify(sources_sorted))
 
+            elseif sub_attr.id == "sources_as_filename" then
+                sources_as_filename = (pandoc.utils.stringify(sub_attr.name) == "true")
+                qldebug("META", "Check Meta - sources_as_filename: " .. pandoc.utils.stringify(sources_as_filename))
 
             -- Handle LINK YAML attributes
             elseif sub_attr.id == "link_to_artifact_style" then
@@ -580,6 +738,30 @@ local filter = {
                 judgment_style = pandoc.utils.stringify(sub_attr.name)
                 qldebug("META", "Check Meta - judgment_style: " .. judgment_style)
 
+            elseif sub_attr.id == "link_to_artifact_job_prefix" then
+                link_to_artifact_job_prefix = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_job_prefix: " .. link_to_artifact_job_prefix)
+
+            elseif sub_attr.id == "link_to_artifact_job_sep" then             
+                link_to_artifact_job_sep = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_job_sep: " .. link_to_artifact_job_sep)
+
+            elseif sub_attr.id == "link_to_artifact_job_suffix" then
+                link_to_artifact_job_suffix = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_job_suffix: " .. link_to_artifact_job_suffix)
+
+            elseif sub_attr.id == "link_to_artifact_resume_prefix" then
+                link_to_artifact_resume_prefix = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_resume_prefix: " .. link_to_artifact_resume_prefix)
+
+            elseif sub_attr.id == "link_to_artifact_resume_sep" then
+                link_to_artifact_resume_sep = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_resume_sep: " .. link_to_artifact_resume_sep)
+
+            elseif sub_attr.id == "hyperlink_prefix" then
+                hyperlink_prefix = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - hyperlink_prefix: " .. hyperlink_prefix)
+
             end
         end
 
@@ -588,6 +770,101 @@ local filter = {
         end
 
         return m
+    end,
+
+    Header = function(el)
+
+        if (el.level == 1) then
+            el_content = pandoc.utils.stringify(el.content)
+
+            -- If el_content starts with "Standard ", then it is a standard
+            if string.find(el_content, "Standard ", 1, true) then
+                qldebug("HEADER", "    ...Standard")
+                qldebug("HEADER", "    ...attr: " .. dump(el.attr))
+                el_content_zero = insert_zero("Standard ", el_content)
+                qldebug("HEADER", "    ...content_zero: " .. el_content_zero)
+                chapter_heading = el_content
+                chapter_heading_zero = el_content_zero
+
+                file_being_processed = el_content_zero .. ".qmd"
+                file_being_processed_core = el_content_zero .. standards_core_suffix .. ".qmd"
+                sources_path_sub = el_content_zero
+                sources_path_core_sub = el_content_zero .. standards_core_suffix
+                qldebug("HEADER", "    ...file_being_processed    : " .. file_being_processed)
+                qldebug("HEADER", "    ...fn (sources_path_sub): " .. sources_path_sub)
+
+                return el
+            end
+        end
+        return el
+    end,
+
+    Image = function(el)
+        qldebug("IMAGE", "    ...el: " .. dump(el))
+        -- replace the '.' with the root_dir
+        el.src = pandoc.path.normalize( root_dir .. "/" .. el.src )
+        -- remove standards_path from the el.src
+        el.src = string.gsub(el.src, standards_path, "")
+        qldebug("IMAGE", "    ...el.src: " .. el.src)
+        return el
+    end,
+
+    Link = function(el)
+        el_attr = el.attributes 
+        el_content = el.content
+        el_target = el.target
+        --el_title = el.title
+        --el_attributes = el.attributes
+        qldebug("LINK", "    ...metatype: " .. metatype(el_content))
+        qldebug("LINK", pandoc.utils.stringify(el.content) .. "  -  " .. dump(el_attr) )
+        qldebug("LINK", "    ...el_target: " .. el_target)
+        qldebug("LINK", "    ...el_content: " .. dump(el_content))
+        --qldebug("LINK", "    ...el_title: " .. el_title)
+        --qldebug("LINK", "    ...el_attributes: " .. dump(el_attributes))
+
+        if el.content[1].tag == "Span" and el.content[1].attributes["custom-style"] == "Hyperlink" then
+            qldebug("LINK", "    ...Hyperlink: " .. dump(el.content[1].attributes))
+            qldebug("LINK", "    ...hyperlink_prefix: " .. hyperlink_prefix)
+            -- Remove the portion matched by the pattern hyperlink_prefix and replace it with an empty string
+            --el_target = string.gsub(pandoc.utils.stringify(el_target), hyperlink_prefix, "")
+            el.target = el.target:gsub(hyperlink_prefix, "")
+            idx = nil
+            idx, endpos = el.target:find(hyperlink_prefix, 1, true)
+            if idx ~= nil then
+                qldebug("LINK", "    ...idx: " .. idx .. "  -  " .. endpos)
+                --el_target = string.sub(el_target, 1, idx - 1)
+                el.target = el.target:sub(endpos+1, el.target:len())
+            end
+
+            -- remove everything after the & character
+            --idx = string.find(el_target, "&", 1, true)
+            idx, endpos = el.target:find("?", 1, true)
+            if idx ~= nil then
+                qldebug("LINK", "    ...idx: " .. idx .. "  -  " .. endpos)
+                --el_target = string.sub(el_target, 1, idx - 1)
+                el.target = el.target:sub(1, idx - 1)
+            end
+
+            -- Use the raw target to make a link for Sources
+
+            if sources_as_filename then
+                content = el.target:match("/([^/]+)$")
+            else
+                content = pandoc.utils.stringify(el.content)
+            end
+            qldebug("LINK", "    ...content: " .. content)
+            rtn_str = make_link(sources_path .. "/", el.target, "", content)
+            qldebug("LINK", "    ...sources_path - sub: " .. sources_path .. "  -  " .. sources_path_sub)
+            -- Now fix the target to include the sources path
+            el.target = sources_path .. "/" .. el.target
+
+            --rtn_str = "[" .. pandoc.utils.stringify(el.content) .. "](" .. el.target .. ")"
+            qldebug("LINK", "rtn_str: " .. rtn_str)
+            add_to_sources(sources_list, rtn_str)
+            --return pandoc.Span(pandoc.RawInline(raw_type, rtn_str), pandoc.Attr("",{},{{"custom-style","Hyperlink"}}))
+            return el
+        end
+
     end,
 
     Span = function(el)
@@ -631,6 +908,14 @@ local filter = {
                 qldebug("link_to_artifact_style", "    ...unit_code: " .. _G.unit_code .. "  [R] -  " .. pandoc.utils.stringify(el.content))
                 return link_to_artifact(el, "review")
 
+            elseif custom_style == (link_to_artifact_style .. " - " .. link_to_artifact_job_prefix) then
+                qldebug("link_to_artifact_style", " [J] -  " .. pandoc.utils.stringify(el.content))
+                return link_to_artifact(el, "job")
+
+            elseif custom_style == (link_to_artifact_style .. " - " .. link_to_artifact_resume_prefix) then
+                qldebug("link_to_artifact_style", " [R] -  " .. pandoc.utils.stringify(el.content))
+                return link_to_artifact(el, "resume")
+
                 --- Handle LINKs to standards
             elseif custom_style == link_standard_style then
                 qldebug("link_standard_style", "Link to Standards")
@@ -640,17 +925,38 @@ local filter = {
             elseif custom_style == sources_style then
                 qldebug("sources_block", "Sources Block")
 
+                qldebug("sources_block", "    ...el: " .. dump(el))
                 qldebug("sources_block", "sources_list: " .. dump(sources_list))
+
+                local loc_li_start = ""
+                local loc_source = ""
 
                 rtn_str = pandoc.utils.stringify(li_hdr)
                 for i = 1, #sources_list do
                     qldebug("sources_block", "    ...source(" .. i .. "): " .. sources_list[i])
-                    rtn_str = pandoc.utils.stringify(rtn_str .. li_start .. sources_list[i] .. li_end)
+                    -- replace ## in li_start with i
+                    loc_li_start = string.gsub(li_start, "##", tostring(i))
+                    -- replace & with \& in sources_list[i] and save in loc_source
+                    loc_source = string.gsub(sources_list[i], "&", "\\&")
+                    rtn_str = pandoc.utils.stringify(rtn_str .. loc_li_start .. loc_source .. li_end)
                 end
                 rtn_str = pandoc.utils.stringify(rtn_str .. li_ftr)
 
-                return pandoc.Span(pandoc.RawInline(raw_type, rtn_str))
+                -- Now, clear out the sources block for the next standard
+                sources_list = {}
+                qldebug("sources_block", "    ...rtn_str: " .. rtn_str)
 
+                -- Not sure how to output this so that PDF will render correctly
+                return pandoc.Span(pandoc.RawInline("html", rtn_str))
+                --return pandoc.Span(pandoc.RawInline(raw_type, rtn_str))
+                --return pandoc.Span(pandoc.RawInline('markdown', rtn_str))
+                --return pandoc.Span(pandoc.RawInline('latex', rtn_str))
+                --return pandoc.RawInline('latex', rtn_str)
+                --return pandoc.Span(rtn_str)
+
+            else
+                qldebug("SPAN", "    ...custom-style: " .. custom_style)
+                return el
             end    
         end
 

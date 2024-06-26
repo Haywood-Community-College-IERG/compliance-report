@@ -37,6 +37,10 @@ accreditation:
   # Default is "true" (alphabetical)
   #- sources_sorted: "false"
 
+  # Specify whether the sources should be listed as the file name or the selected text
+  # Default is "false"
+  #- sources_as_filename: "true"
+
   ### LINKs ###
   # Word style used for links to sources/artifacts/evidence
   # NOTE: All artifacts should be PDFs
@@ -67,3 +71,6 @@ accreditation:
   # Word style used for judgment
   # Default: "Judgment"
   #- judgment_style: "Judgment"
+
+  #- hyperlink_prefix: "<the url up through the evidence folder>"
+  

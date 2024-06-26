@@ -11,9 +11,9 @@ project:
     - summary.qmd
 
 filters:
-#  - accreditation
-  - quarto
+  - accreditation
   - fontawesome
+  - quarto
 
 
 book:
