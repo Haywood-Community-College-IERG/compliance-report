@@ -5,7 +5,6 @@ local site_path = "_site"
 
 local yaml_tagname = "accreditation"
 local debug = "warning" -- can be blank or "error"
-local replace_spaces = true
 
 local root_dir = ""
 local file_being_processed = ""
@@ -57,6 +56,7 @@ local link_standard_style = "Link to Standard"
 
 local hyperlink_style = "Hyperlink"
 local hyperlink_prefix = ""
+local replace_spaces = true
 
 local judgment_style = "Judgment"
 
@@ -113,7 +113,7 @@ local trace_options = { "link_to_artifact_style",
                         -- "judgment_style",
                         -- "sources_style",
                         -- "DIV",
-                        --"LINK",
+                        "LINK",
                         "SPAN",
                         --"IMAGE",
                         --"STR","PLAIN",
@@ -929,6 +929,10 @@ local filter = {
                 hyperlink_prefix = pandoc.utils.stringify(sub_attr.name)
                 qldebug("META", "Check Meta - hyperlink_prefix: " .. hyperlink_prefix)
 
+            elseif sub_attr.id == "replace_spaces" then
+                replace_spaces = (pandoc.utils.stringify(sub_attr.name) == "true")
+                qldebug("META", "Check Meta - replace_spaces: " .. pandoc.utils.stringify(replace_spaces))
+                
             end
         end
 
@@ -1047,21 +1051,36 @@ local filter = {
                 el.target = el.target:sub(1, idx - 1)
             end
 
+            qldebug("LINK", "    ...el_target(1): " .. el.target)
+            -- If replace_spaces is true, then replace spaces with -
+            if replace_spaces then
+                el.target = el.target:gsub(" ", "-")
+                el.target = el.target:gsub("%%20", "-")
+            end
+            qldebug("LINK", "    ...el_target(2): " .. el.target)
+
             -- Use the raw target to make a link for Sources
 
+            -- Now fix the target to include the sources path
+            qldebug("LINK", "    ...sources_path - sub: " .. sources_path .. "  -  " .. sources_path_sub)
+            el.target = sources_path .. "/" .. el.target
+
+            if output_format == "html" then
+                el.target = "../" .. el.target
+            end
+            qldebug("LINK", "    ...el_target(3): " .. el.target)
+        
             if sources_as_filename then
                 content = el.target:match("/([^/]+)$")
             else
                 content = pandoc.utils.stringify(el.content)
             end
             qldebug("LINK", "    ...content: " .. content)
-            rtn_str = make_link(sources_path .. "/", el.target, "", content)
-            qldebug("LINK", "    ...sources_path - sub: " .. sources_path .. "  -  " .. sources_path_sub)
-            -- Now fix the target to include the sources path
-            el.target = sources_path .. "/" .. el.target
+            rtn_str = make_link("", el.target, "", content)
+            -- rtn_str = make_link(sources_path .. "/", el.target, "", content)
 
             --rtn_str = "[" .. pandoc.utils.stringify(el.content) .. "](" .. el.target .. ")"
-            qldebug("LINK", "rtn_str: " .. rtn_str)
+            qldebug("LINK", "rtn_str: " .. dump(rtn_str))
             add_to_sources(sources_list, rtn_str)
             --return pandoc.Span(pandoc.RawInline(output_format, rtn_str), pandoc.Attr("",{},{{"custom-style","Hyperlink"}}))
             return el
