@@ -28,6 +28,7 @@ param (
     [switch]$evidencefldr_contains_standard = $false,   # RptRoot/_Artifacts/StandardFldr?
     [string]$core_requirement_suffix = ""            # " (CR)"
 
+    [switch]$replace_spaces = $true
 )
 
 $DEBUG = $true
@@ -112,7 +113,9 @@ $db_groups = @(
     "ConvertBoxes",
     "ConvertEvidenceLinks",
     "ConvertDocx",
-    "GetArtifacts"
+    "GetArtifacts",
+    "Standards"
+    #"GetStdSourceFolder"
 )
 
 function dbg {
@@ -203,12 +206,13 @@ function Convert-Evidence-Links { # ignore
         [string]$output_link
     )
 
-    # First, encode all spaces in the input and output strings as %20
-    $input_link = $input_link -replace " ", "%20"
-    $output_link = $output_link -replace " ", "%20"
-    # Then, URL encode the remaining input and output strings
-    #$input_link = [System.Web.HttpUtility]::UrlEncode($input_link)
-    #$output_link = [System.Web.HttpUtility]::UrlEncode($output_link)
+    Write-Host "EvidenceLinks...replace links: $input_link with $output_link"
+
+    # First, encode all spaces in the input and output strings as -
+    if ($replace_spaces) {
+        $input_link = $input_link -replace " ", "-"
+        $output_link = $output_link -replace " ", "-"
+    }
 
     $text = Get-Content $fn
 
@@ -259,7 +263,11 @@ function Convert-Docx {
     # In the markdown file, replace all instances of ☒ with 
     #     {{< fa regular square-check title="Checked box" >}} and all instances
     #     of ☐ with {{< fa regular square title="Unchecked box" >}}
-    Write-Host "...replace ☒ and ☐ with FontAwesome icons"
+    if ($PSVer -lt 6) {
+        Write-Host "...replace checkboxes with FontAwesome icons"
+    } else {
+        Write-Host "...replace ☒ and ☐ with FontAwesome icons"
+    }
     Convert-Boxes -fn $std_md_path
 
     Convert-Tables-To-RawBlocks -fn $std_md_path
@@ -282,7 +290,15 @@ function Get-Artifacts { # ignore
         }
 
         $art_file_path_src = "$src_fldr_str/$_"
-        $art_file_path_dst = "$dst_fldr_str/$_"
+
+        # if replace_spaces is true, then replace spaces with dashes for the dst file
+        if ($replace_spaces) {
+            $dst_file = $_ -replace " ", "-"
+        } else {
+            $dst_file = $_
+        }
+
+        $art_file_path_dst = "$dst_fldr_str/$dst_file"
 
         Write-Host "...copy $art_file_path_src into $art_file_path_dst"
         Copy-Item -Path $art_file_path_src -Destination $art_file_path_dst
@@ -325,7 +341,13 @@ for ($i = 0; $i -lt $std_count; $i++) {
         $output_standard_number = "$output_standard_number$CORE_REQUIREMENT_SUFFIX"
     }
     $output_file = "$OUTPUT_STANDARD_PREFIX$output_standard_number$OUTPUT_STANDARD_SUFFIX"
-    Write-Host "output_file: $output_file"
+
+    # Rename the markdown file to replace spaces with dashes
+    if ($replace_spaces) {
+        $output_file = $output_file -replace " ", "-"
+    }
+
+    dbg "Standards", "output_file: $output_file"
 
     Convert-Docx -std_num $std_num -std_str $std_str -std_fldr $std_fldr_str -output_file $output_file -dst_path $DST_REQ_FLDR_STR
 
@@ -348,8 +370,6 @@ for ($i = 0; $i -lt $std_count; $i++) {
         
         Get-Artifacts -src_fldr_str $artifacts_src_fldr_str -dst_fldr_str $artifacts_dst_fldr_str
 
-		# Remove the $SOURCE_ROOT_PATH/$evidence_folder from the $artifacts_src_fldr_str variable
-        #     and replace it with blanks
         # We want to replace the links in the markdown files to point to the correct location now that it has been moved.
         # The SOURCE_ROOT_PATH is the path to the root folder where the evidence folder is located
         # We want to remove this path from the $artifact_src_fldr_str variable to reduce that variable to just the standards evidence folder
@@ -362,6 +382,13 @@ for ($i = 0; $i -lt $std_count; $i++) {
 
         Write-Host "...replace links: $artifacts_src_fldr_str with $output_file"
         Convert-Evidence-Links -fn "$DST_REQ_FLDR_STR/$output_file.qmd" -input_link $artifacts_src_fldr_str -output_link $output_file
+
+        # Now convert the output to UTF8 without BOM for v5. v6+ is already correct.
+        if ($PSVer -lt 6) { 
+            $text = Get-Content "$DST_REQ_FLDR_STR/$output_file.qmd"
+            [IO.File]::WriteAllLines("$DST_REQ_FLDR_STR/$output_file.qmd", $text)
+        }
+
     }
 }
 
@@ -383,7 +410,13 @@ if ($qep_source_path) {
     $qep_fldr = $SOURCE_ROOT_PATH
 }
 
-Convert-Docx -std_str $qep -std_fldr $qep_fldr -dst_path $DEST_ROOT_PATH -output_file $qep
+$qep_output_file = $qep
+# Rename the markdown file to replace spaces with dashes
+if ($replace_spaces) {
+    $qep_output_file = $qep_output_file -replace " ", "-"
+}
+
+Convert-Docx -std_str $qep -std_fldr $qep_fldr -dst_path $DEST_ROOT_PATH -output_file $qep_output_file
 
 foreach ($other in $others) {
     Write-Host "Processing $other"
@@ -393,13 +426,24 @@ foreach ($other in $others) {
     } else {
         $others_fldr = $SOURCE_ROOT_PATH
     }
-    
-    Convert-Docx -std_str $other -std_fldr $others_fldr -dst_path $DEST_ROOT_PATH -output_file $other
+  
+    $other_output_file = $other
+    # Rename the markdown file to replace spaces with dashes
+    if ($replace_spaces) {
+        $other_output_file = $other_output_file -replace " ", "-"
+    }
+
+    Convert-Docx -std_str $other -std_fldr $others_fldr -dst_path $DEST_ROOT_PATH -output_file $other_output_file
 }
 
 # Combine the Welcome - Website.qmd and Welcome - PDF.qmd files
-$welcome_website_md_path = "$DEST_ROOT_PATH/Welcome - Website.qmd"
-$welcome_pdf_md_path = "$DEST_ROOT_PATH/Welcome - PDF.qmd"
+if ($replace_spaces) {
+    $welcome_website_md_path = "$DEST_ROOT_PATH/Welcome---Website.qmd"
+    $welcome_pdf_md_path = "$DEST_ROOT_PATH/Welcome---PDF.qmd"
+} else {
+    $welcome_website_md_path = "$DEST_ROOT_PATH/Welcome - Website.qmd"
+    $welcome_pdf_md_path = "$DEST_ROOT_PATH/Welcome - PDF.qmd"
+}
 $welcome_md_path = "$DEST_ROOT_PATH/index.qmd"
 
 $welcome_website_md = Get-Content $welcome_website_md_path
@@ -412,4 +456,9 @@ $div_end = ':::'
 $welcome_md = $div_start_website, $welcome_website_md, $div_end, $div_start_pdf, $welcome_pdf_md, $div_end
 
 Write-Host "Creating index.qmd from $welcome_website_md_path and $welcome_pdf_md_path"
-$welcome_md | Out-File $welcome_md_path
+
+if ($PSVer -lt 6) { 
+    [IO.File]::WriteAllLines($welcome_md_path, $welcome_md)
+} else {
+    $welcome_md | Out-File $welcome_md_path
+}
