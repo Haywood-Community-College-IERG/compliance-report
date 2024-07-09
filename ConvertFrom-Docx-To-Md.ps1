@@ -26,7 +26,7 @@ param (
     [string]$evidence_folder = "", # "_Artifacts"
     [switch]$evidencefldr_in_standard = $false,        # RptRoot/StandardFldr/_Artifacts?
     [switch]$evidencefldr_contains_standard = $false,   # RptRoot/_Artifacts/StandardFldr?
-    [string]$core_requirement_suffix = ""            # " (CR)"
+    [string]$core_requirement_suffix = "",            # " (CR)"
 
     [switch]$replace_spaces = $true
 )
@@ -66,13 +66,13 @@ $core_requirements = @("6.1","8.1","9.1","9.2","12.1")
 
 $standards_numbers = @(
     "5.4",
-    "6.1", "6.2",
-    "8.1", "8.2",
-    "9.1", "9.2",
+    #"6.1", "6.2",
+    #"8.1", "8.2",
+    #"9.1", "9.2",
     "10.2", "10.3", "10.5", "10.6", "10.7", "10.9",
-    "12.1", "12.4",
-    "13.6", "13.7", "13.8",
-    "14.1", "14.3", "14.4"
+    "12.1", "12.4"
+    #"13.6", "13.7", "13.8",
+    #"14.1", "14.3", "14.4"
 )
 
 $standards = @()
@@ -83,7 +83,13 @@ foreach ($std in $standards_numbers) {
     $std_str = $std
 
     if ($INPUT_LEADING_ZEROS) {
-        $std_str = $std_str.PadLeft(4, "0")
+
+        # Split $std_str at the decimal point
+        $std_parts = $std_str.Split(".")
+    
+        # Combine $std_parts[0] padded with 0 to 2 characters, a period, and $std_parts[1]
+        $std_str = "$($std_parts[0].PadLeft(2, "0")).$($std_parts[1])"
+
     }
 
     if ($core_requirements -contains $std) {
@@ -374,11 +380,15 @@ for ($i = 0; $i -lt $std_count; $i++) {
         # The SOURCE_ROOT_PATH is the path to the root folder where the evidence folder is located
         # We want to remove this path from the $artifact_src_fldr_str variable to reduce that variable to just the standards evidence folder
         $remove_part1 = "$SOURCE_ROOT_PATH/$evidence_folder/"
-        $remove_part2 = [IO.Path]::GetFullPath($remove_part1).Replace("\", "/")
+        $remove_part2 = [IO.Path]::GetFullPath($remove_part1).Replace("\", "/").Replace($remove_part1, "")
         # Make sure the slashes are all forward slashes
         $artifacts_src_fldr_str = $artifacts_src_fldr_str.Replace("\", "/")
         $artifacts_src_fldr_str = $artifacts_src_fldr_str.Replace($remove_part1, "")
         $artifacts_src_fldr_str = $artifacts_src_fldr_str.Replace($remove_part2, "")
+
+        if ($replace_spaces) {
+            $artifacts_src_fldr_str = $artifacts_src_fldr_str -replace " ", "-"
+        }
 
         Write-Host "...replace links: $artifacts_src_fldr_str with $output_file"
         Convert-Evidence-Links -fn "$DST_REQ_FLDR_STR/$output_file.qmd" -input_link $artifacts_src_fldr_str -output_link $output_file
