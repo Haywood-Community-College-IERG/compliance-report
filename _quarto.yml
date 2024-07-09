@@ -72,5 +72,9 @@ accreditation:
   # Default: "Judgment"
   #- judgment_style: "Judgment"
 
-  #- hyperlink_prefix: "<the url up through the evidence folder>"
+  # Hyperlink Evidence Path contains the portion of the URL that indicates the path to the evidence
+  - hyperlink_evidence_path: "/report/EVIDENCE/"
+  
+  # Replace Spaces indicates that all spaces and %20 in links to artifacts (whether initiated by styles or hyperlinks) should be replaced with dashes
+  - replace_spaces: "true"
   

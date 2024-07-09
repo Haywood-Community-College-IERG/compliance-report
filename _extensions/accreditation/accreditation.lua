@@ -56,6 +56,7 @@ local link_standard_style = "Link to Standard"
 
 local hyperlink_style = "Hyperlink"
 local hyperlink_prefix = ""
+local hyperlink_evidence_path = ""
 local replace_spaces = true
 
 local judgment_style = "Judgment"
@@ -925,6 +926,12 @@ local filter = {
                 link_to_artifact_resume_prefix_sep = pandoc.utils.stringify(sub_attr.name)
                 qldebug("META", "Check Meta - link_to_artifact_resume_prefix_sep: " .. link_to_artifact_resume_prefix_sep)
 
+                --hyperlink_evidence_path
+            elseif sub_attr.id == "hyperlink_evidence_path" then
+                hyperlink_evidence_path = pandoc.utils.stringify(sub_attr.name):lower()
+                --hyperlink_evidence_path = hyperlink_evidence_path:lower()
+                qldebug("META", "Check Meta - hyperlink_evidence_path: " .. hyperlink_evidence_path)
+
             elseif sub_attr.id == "hyperlink_prefix" then
                 hyperlink_prefix = pandoc.utils.stringify(sub_attr.name)
                 qldebug("META", "Check Meta - hyperlink_prefix: " .. hyperlink_prefix)
@@ -1031,44 +1038,51 @@ local filter = {
         if el.content[1].tag == "Span" and el.content[1].attributes["custom-style"] == "Hyperlink" then
             qldebug("LINK", "    ...Hyperlink: " .. dump(el.content[1].attributes))
             qldebug("LINK", "    ...hyperlink_prefix: " .. hyperlink_prefix)
-            -- Remove the portion matched by the pattern hyperlink_prefix and replace it with an empty string
-            --el_target = string.gsub(pandoc.utils.stringify(el_target), hyperlink_prefix, "")
-            el.target = el.target:gsub(hyperlink_prefix, "")
-            idx = nil
-            idx, endpos = el.target:find(hyperlink_prefix, 1, true)
+            qldebug("LINK", "    ...hyperlink_evidence_path: " .. hyperlink_evidence_path)
+
+            -- First, find the hyperlink_evidence_path in the target. 
+            -- NOTE: It may appear there more than once -- we want the first one.
+            -- NOTE: The search is case-insensitive, so convert everything to lower case first.
+            idx, endpos = (el_target:lower()):find(hyperlink_evidence_path:lower(), 1, true)
             if idx ~= nil then
                 qldebug("LINK", "    ...idx: " .. idx .. "  -  " .. endpos)
                 --el_target = string.sub(el_target, 1, idx - 1)
-                el.target = el.target:sub(endpos+1, el.target:len())
+                --el_target_part1 = el_target:sub(1, idx - 1)
+                el_target = el_target:sub(endpos + 1, el_target:len())
             end
+            qldebug("LINK", "    ...el_target(1): " .. el_target)
 
-            -- remove everything after the & character
-            --idx = string.find(el_target, "&", 1, true)
-            idx, endpos = el.target:find("?", 1, true)
+            -- el_target should start with the folder where the artifact lives
+            -- It is optionally followed by a question mark or an ampersand and other stuff -- remove that
+            idx, endpos = el_target:find("?", 1, true)
             if idx ~= nil then
                 qldebug("LINK", "    ...idx: " .. idx .. "  -  " .. endpos)
-                --el_target = string.sub(el_target, 1, idx - 1)
-                el.target = el.target:sub(1, idx - 1)
+                el_target = el_target:sub(1, idx - 1)
+            end
+            idx, endpos = el_target:find("&", 1, true)
+            if idx ~= nil then
+                qldebug("LINK", "    ...idx: " .. idx .. "  -  " .. endpos)
+                el_target = el_target:sub(1, idx - 1)
             end
 
-            qldebug("LINK", "    ...el_target(1): " .. el.target)
+            qldebug("LINK", "    ...el_target(2): " .. el_target)
             -- If replace_spaces is true, then replace spaces with -
             if replace_spaces then
-                el.target = el.target:gsub(" ", "-")
-                el.target = el.target:gsub("%%20", "-")
+                el_target = el_target:gsub(" ", "-")
+                el_target = el_target:gsub("%%20", "-")
             end
-            qldebug("LINK", "    ...el_target(2): " .. el.target)
+            qldebug("LINK", "    ...el_target(3): " .. el_target)
 
             -- Use the raw target to make a link for Sources
 
             -- Now fix the target to include the sources path
             qldebug("LINK", "    ...sources_path - sub: " .. sources_path .. "  -  " .. sources_path_sub)
-            el.target = sources_path .. "/" .. el.target
+            el_target = sources_path .. "/" .. el_target
 
             if output_format == "html" then
-                el.target = "../" .. el.target
+                el_target = "../" .. el_target
             end
-            qldebug("LINK", "    ...el_target(3): " .. el.target)
+            qldebug("LINK", "    ...el_target(4): " .. el_target)
         
             if sources_as_filename then
                 content = el.target:match("/([^/]+)$")
@@ -1076,12 +1090,16 @@ local filter = {
                 content = pandoc.utils.stringify(el.content)
             end
             qldebug("LINK", "    ...content: " .. content)
-            rtn_str = make_link("", el.target, "", content)
+            rtn_str = make_link("", el_target, "", content)
             -- rtn_str = make_link(sources_path .. "/", el.target, "", content)
 
             --rtn_str = "[" .. pandoc.utils.stringify(el.content) .. "](" .. el.target .. ")"
             qldebug("LINK", "rtn_str: " .. dump(rtn_str))
             add_to_sources(sources_list, rtn_str)
+
+            -- Now, save the new target
+            el.target = el_target
+
             --return pandoc.Span(pandoc.RawInline(output_format, rtn_str), pandoc.Attr("",{},{{"custom-style","Hyperlink"}}))
             return el
         end
