@@ -55,7 +55,6 @@ local link_to_artifact_resume_suffix_sep = ""
 local link_standard_style = "Link to Standard"
 
 local hyperlink_style = "Hyperlink"
-local hyperlink_prefix = ""
 local hyperlink_evidence_path = ""
 local replace_spaces = true
 
@@ -932,10 +931,6 @@ local filter = {
                 --hyperlink_evidence_path = hyperlink_evidence_path:lower()
                 qldebug("META", "Check Meta - hyperlink_evidence_path: " .. hyperlink_evidence_path)
 
-            elseif sub_attr.id == "hyperlink_prefix" then
-                hyperlink_prefix = pandoc.utils.stringify(sub_attr.name)
-                qldebug("META", "Check Meta - hyperlink_prefix: " .. hyperlink_prefix)
-
             elseif sub_attr.id == "replace_spaces" then
                 replace_spaces = (pandoc.utils.stringify(sub_attr.name) == "true")
                 qldebug("META", "Check Meta - replace_spaces: " .. pandoc.utils.stringify(replace_spaces))
@@ -1037,7 +1032,6 @@ local filter = {
 
         if el.content[1].tag == "Span" and el.content[1].attributes["custom-style"] == "Hyperlink" then
             qldebug("LINK", "    ...Hyperlink: " .. dump(el.content[1].attributes))
-            qldebug("LINK", "    ...hyperlink_prefix: " .. hyperlink_prefix)
             qldebug("LINK", "    ...hyperlink_evidence_path: " .. hyperlink_evidence_path)
 
             -- First, find the hyperlink_evidence_path in the target. 
