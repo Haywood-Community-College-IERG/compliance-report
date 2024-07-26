@@ -5,14 +5,12 @@ project:
   render:
     - index.qmd
     - requirements.qmd
-    - requirements/*.qmd
+    - requirements/Standard*.qmd
     - QEP Impact Report.qmd
     - support.qmd
     - overview.qmd
     - leadership.qmd
     - signatures.qmd
-    - summary.qmd
-    - documents.qmd
 
 filters:
   - accreditation
@@ -48,25 +46,26 @@ website:
             - overview.qmd
             - leadership.qmd
             - signatures.qmd
-            - summary.qmd
+            - text: "Institutional Summary"
+              href: Summary.pdf
 
     - title: "Requirements"
       contents:
         - requirements.qmd
         - requirements/Standard 05.4.qmd
-        - requirements/Standard 06.1 (CR).qmd
+        - requirements/Standard 06.1.qmd
         - requirements/Standard 06.2.qmd 
-        - requirements/Standard 08.1 (CR).qmd
+        - requirements/Standard 08.1.qmd
         - requirements/Standard 08.2.qmd
-        - requirements/Standard 09.1 (CR).qmd
-        - requirements/Standard 09.2 (CR).qmd
+        - requirements/Standard 09.1.qmd
+        - requirements/Standard 09.2.qmd
         - requirements/Standard 10.2.qmd 
         - requirements/Standard 10.3.qmd
         - requirements/Standard 10.5.qmd
         - requirements/Standard 10.6.qmd
         - requirements/Standard 10.7.qmd
         - requirements/Standard 10.9.qmd
-        - requirements/Standard 12.1 (CR).qmd
+        - requirements/Standard 12.1.qmd
         - requirements/Standard 12.4.qmd
         - requirements/Standard 13.6.qmd
         - requirements/Standard 13.7.qmd
@@ -79,10 +78,6 @@ website:
       contents: 
         - QEP Impact Report.qmd
     
-    - title: "Documents"
-      contents: 
-        - documents.qmd
-
   navbar:
     logo: images/GenericLogo.png
     background: dark
@@ -93,8 +88,6 @@ website:
         href: requirements.qmd
       - text: "QEP"
         href: QEP Impact Report.qmd
-      - text: "Documents"
-        href: documents.qmd
     tools:
       - icon: question-circle
         href: support.qmd
