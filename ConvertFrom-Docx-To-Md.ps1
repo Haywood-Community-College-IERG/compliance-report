@@ -21,14 +21,14 @@ param (
 
     [string]$standard_prefix_dest = "Standard ",
     [string]$standard_suffix_dest = "",
-    [switch]$leading_zeros_dest = $true,
+    [switch]$leading_zeros_dest = $false,
 
     [string]$evidence_folder = "", # "_Artifacts"
     [switch]$evidencefldr_in_standard = $false,        # RptRoot/StandardFldr/_Artifacts?
     [switch]$evidencefldr_contains_standard = $false,   # RptRoot/_Artifacts/StandardFldr?
     [string]$core_requirement_suffix = "",            # " (CR)"
 
-    [switch]$replace_spaces = $true
+    [switch]$replace_spaces = $false
 )
 
 $DEBUG = $true
@@ -66,40 +66,15 @@ $core_requirements = @("6.1","8.1","9.1","9.2","12.1")
 
 $standards_numbers = @(
     "5.4",
-    "6.1", "6.2",
-    "8.1", "8.2",
-    "9.1", "9.2",
-    "10.2", "10.3", "10.5", "10.6", "10.7", "10.9",
-    "12.1", "12.4",
-    "13.6", "13.7", "13.8",
-    "14.1", "14.3", "14.4"
+    #"6.1", "6.2",
+    #"6.2.a",
+    #"8.1", "8.2",
+    #"9.1", "9.2",
+    "10.2", "10.3", #"10.5", "10.6", "10.7", "10.9",
+    "12.1" #, "12.4"
+    #"13.6", "13.7", "13.8",
+    #"14.1", "14.3", "14.4"
 )
-
-$standards = @()
-
-# For each standard, add the core requirement suffix if it is a core requirement, and add leading zeros if necessary
-# Then add the standard prefix and suffix
-foreach ($std in $standards_numbers) {
-    $std_str = $std
-
-    if ($INPUT_LEADING_ZEROS) {
-
-        # Split $std_str at the decimal point
-        $std_parts = $std_str.Split(".")
-    
-        # Combine $std_parts[0] padded with 0 to 2 characters, a period, and $std_parts[1]
-        $std_str = "$($std_parts[0].PadLeft(2, "0")).$($std_parts[1])"
-
-    }
-
-    if ($core_requirements -contains $std) {
-        $std_str = "$std_str$CORE_REQUIREMENT_SUFFIX"
-    }
-
-    $std_str = "$standard_prefix$std_str$standard_suffix"
-
-    $standards += $std_str
-}
 
 $qep = "QEP Impact Report"
 
@@ -109,10 +84,13 @@ $others = @("Welcome - Website",
             "Leadership", 
             "Requirements",
             "Signatures", 
-            "Summary", 
             "Support"
-            #"Documents"
             )
+
+$others_pdf = @("Summary.pdf")
+
+$standards_input = @()
+$standards_output = @()
 
 $db_groups = @(
     "EvidenceLinks",
@@ -120,8 +98,9 @@ $db_groups = @(
     "ConvertEvidenceLinks",
     "ConvertDocx",
     "GetArtifacts",
-    "Standards"
-    #"GetStdSourceFolder"
+    "Standards",
+    "GetStdSourceFolder",
+    "Welcome"
 )
 
 function dbg {
@@ -137,6 +116,58 @@ function dbg {
 }
 
 
+# For each standard, add the core requirement suffix if it is a core requirement, and add leading zeros if necessary
+# Then add the standard prefix and suffix
+foreach ($std in $standards_numbers) {
+    # Create the input standard string
+    $std_str = $std
+
+    dbg -group "Standards" -msg "std_str (0): $std_str"
+
+    if ($INPUT_LEADING_ZEROS) {
+
+        # Split $std_str at the decimal point
+        $std_parts = $std_str.Split(".", 2)
+        dbg -group "Standards" -msg "std_parts (LZ): $std_parts, {$($std_parts[0])}, {$($std_parts[1])}"
+    
+        # Combine $std_parts[0] padded with 0 to 2 characters, a period, and $std_parts[1]
+        $std_str = "$($std_parts[0].PadLeft(2, "0")).$($std_parts[1])"
+
+        dbg -group "Standards" -msg "std_str (LZ): $std_str"
+    }
+
+    if ($core_requirements -contains $std) {
+        $std_str = "$std_str$CORE_REQUIREMENT_SUFFIX"
+        dbg -group "Standards" -msg "std_str (CR): CR=[$CORE_REQUIREMENT_SUFFIX], Str=[$std_str]"
+    }
+
+    $std_str = "$standard_prefix$std_str$standard_suffix"
+
+    $standards_input += $std_str
+
+    dbg -group "Standards" -msg "std_str (I): $std_str"
+
+    # Create the output standard string
+    $std_str = $std
+
+    if ($OUTPUT_LEADING_ZEROS) {
+        # Split $std_str at the decimal point
+        $std_parts = $std_str.Split(".", 2)
+        dbg -group "Standards" -msg "std_parts (LZ): $std_parts, {$($std_parts[0])}, {$($std_parts[1])}"
+    
+        # Combine $std_parts[0] padded with 0 to 2 characters, a period, and $std_parts[1]
+        $std_str = "$($std_parts[0].PadLeft(2, "0")).$($std_parts[1])"
+
+        dbg -group "Standards" -msg "std_str (LZ): $std_str"
+    
+    }
+
+    $std_str = "$OUTPUT_STANDARD_PREFIX$std_str$OUTPUT_STANDARD_SUFFIX"
+
+    $standards_output += $std_str
+}
+
+
 ### TODO: Add parameter checks here!!!
 
 
@@ -146,9 +177,12 @@ function Get-StdSource-Folder { # ignore
         [string]$src_path
     )
 
+    dbg -group "GetStdSourceFolder" -msg "std_num: $std_num, src_path: $src_path"
+
     if ($FILES) {
         # The standards are individual files in the path provided
-        return $src_path.Replace("\", "/")
+        $rtn = $src_path.Replace("\", "/")
+        dbg -group "GetStdSourceFolder" -msg "rtn (F): $rtn"
     } else {
         # The standards are in their own folders
 
@@ -159,8 +193,11 @@ function Get-StdSource-Folder { # ignore
         $std_fldr = $folders | Where-Object { $_.Name -match $std_num }
 
         # Return the path to the standard folder
-        return $std_fldr.FullName.Replace("\", "/")
+        $rtn = $std_fldr.FullName.Replace("\", "/")
+        dbg -group "GetStdSourceFolder" -msg "rtn: $rtn"
     }
+
+    return $rtn
 }
 
 function Convert-Pandoc { # ignore
@@ -182,6 +219,8 @@ function Convert-Boxes { # ignore
         [string]$fn
     )
 
+    dbg -group "ConvertBoxes" -msg "fn: $fn"
+
     $text = Get-Content $fn
 
     $text = $text -replace "☒", '{{< fa regular check-square title="Checked box" >}}'
@@ -195,6 +234,8 @@ function Convert-Tables-To-RawBlocks { # ignore
     param (
         [string]$fn
     )
+
+    dbg -group "ConvertTablesToRawBlocks" -msg "fn: $fn"
 
     $text = Get-Content $fn
 
@@ -214,9 +255,9 @@ function Convert-Evidence-Links { # ignore
 
     Write-Host "EvidenceLinks...replace links: $input_link with $output_link"
 
-    # First, encode all spaces in the input and output strings as -
+    # If requested, encode all spaces in the output strings as -
     if ($replace_spaces) {
-        $input_link = $input_link -replace " ", "-"
+        #$input_link = $input_link -replace " ", "-"
         $output_link = $output_link -replace " ", "-"
     }
 
@@ -277,6 +318,38 @@ function Convert-Docx {
     Convert-Boxes -fn $std_md_path
 
     Convert-Tables-To-RawBlocks -fn $std_md_path
+
+    $text = Get-Content $std_md_path
+
+    # Replace URL characters like %20 in the file
+    $text = $text -replace "%20", " "
+    $text = $text -replace "%28", "("
+    $text = $text -replace "%29", ")"
+    $text = $text -replace "%2C", ","
+    $text = $text -replace "%2D", "-"
+    $text = $text -replace "%2E", "."
+    $text = $text -replace "%2F", "/"
+    $text = $text -replace "%3A", ":"
+    $text = $text -replace "%3B", ";"
+    $text = $text -replace "%3C", "<"
+    $text = $text -replace "%3D", "="
+    $text = $text -replace "%3E", ">"
+    $text = $text -replace "%3F", "?"
+    $text = $text -replace "%40", "@"
+    $text = $text -replace "%5B", "["
+    $text = $text -replace "%5C", "\"
+    $text = $text -replace "%5D", "]"
+    $text = $text -replace "%5E", "^"
+    $text = $text -replace "%5F", "_"
+    $text = $text -replace "%60", "``"
+    $text = $text -replace "%7B", "{"
+    $text = $text -replace "%7C", "|"
+    $text = $text -replace "%7D", "}"
+    $text = $text -replace "%7E", "~"
+
+    # Write the modified text back to the file
+    $text | Out-File $std_md_path
+    
 }
 
 function Get-Artifacts { # ignore
@@ -333,20 +406,13 @@ for ($i = 0; $i -lt $std_count; $i++) {
     # Lookup the standard string from standards for the standard number std_num
     # This is the name of the file
     # It is like "Standard 5.4_narrative" or "Standard 10.2_narrative"
-    $std_str = $standards[$i]
+    $std_str = $standards_input[$i]
 
     $std_fldr_str = Get-StdSource-Folder -std_num $std_num -src_path $SOURCE_ROOT_PATH
 
-    $output_standard_number = $std_num
+    $output_standard_number = $standards_output[$i]
 
-    # Fix output_standard_number to have leading zeros if necessary
-    if ($OUTPUT_LEADING_ZEROS) {
-        $output_standard_number = $output_standard_number.PadLeft(4, "0")
-    }
-    if ($core_requirements -contains $std_num) {
-        $output_standard_number = "$output_standard_number$CORE_REQUIREMENT_SUFFIX"
-    }
-    $output_file = "$OUTPUT_STANDARD_PREFIX$output_standard_number$OUTPUT_STANDARD_SUFFIX"
+    $output_file = $output_standard_number
 
     # Rename the markdown file to replace spaces with dashes
     if ($replace_spaces) {
@@ -456,12 +522,12 @@ if ($replace_spaces) {
 }
 $welcome_md_path = "$DEST_ROOT_PATH/index.qmd"
 
-$welcome_website_md = Get-Content $welcome_website_md_path
-$welcome_pdf_md = Get-Content $welcome_pdf_md_path
+$welcome_website_md = Get-Content $welcome_website_md_path -Raw
+$welcome_pdf_md = Get-Content $welcome_pdf_md_path -Raw
 
-$div_start_website = '::: {.content-visible when-profile="website"}'
-$div_start_pdf = '::: {.content-visible when-profile="pdf"}'
-$div_end = ':::'
+$div_start_website = "::: {.content-visible when-profile=`"website`"}`n"
+$div_start_pdf = "`n::: {.content-visible when-profile=`"pdf`"}`n"
+$div_end = "`n:::`n"
 
 $welcome_md = $div_start_website, $welcome_website_md, $div_end, $div_start_pdf, $welcome_pdf_md, $div_end
 
@@ -471,4 +537,23 @@ if ($PSVer -lt 6) {
     [IO.File]::WriteAllLines($welcome_md_path, $welcome_md)
 } else {
     $welcome_md | Out-File $welcome_md_path
+}
+
+foreach ($other in $others_pdf) {
+    Write-Host "Processing $other"
+
+    if ($others_source_path) {
+        $others_fldr = $others_source_path
+    } else {
+        $others_fldr = $SOURCE_ROOT_PATH
+    }
+  
+    $other_output_file = $other
+    # Rename the markdown file to replace spaces with dashes
+    if ($replace_spaces) {
+        $other_output_file = $other_output_file -replace " ", "-"
+    }
+
+    # Copy the PDF file specified in $other located in the $others_fldr to the destination $other_output_file
+    Copy-Item -Path "$($others_fldr)\$($other)" -Destination $other_output_file
 }
