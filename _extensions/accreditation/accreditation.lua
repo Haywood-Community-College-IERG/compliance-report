@@ -1043,6 +1043,8 @@ local filter = {
                 --el_target = string.sub(el_target, 1, idx - 1)
                 --el_target_part1 = el_target:sub(1, idx - 1)
                 el_target = el_target:sub(endpos + 1, el_target:len())
+            else
+                qlerror("LINK", "Hyperlink Evidence Path not found in target (" .. el_target .. ")"
             end
             qldebug("LINK", "    ...el_target(1): " .. el_target)
 
