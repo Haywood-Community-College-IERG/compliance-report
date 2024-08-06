@@ -5,17 +5,11 @@ project:
   render:
     - index.qmd
     - requirements.qmd
-    - requirements/Standard*.qmd
-    - QEP Impact Report.qmd
+    - requirements/Standard-*.qmd
+    - QEP-Impact-Report.qmd
     - support.qmd
     - overview.qmd
     - leadership.qmd
-    - signatures.qmd
-
-filters:
-  - accreditation
-  - fontawesome
-  - quarto
 
 website:
   title: "5th-Year Reaffirmation"
@@ -45,38 +39,40 @@ website:
             - index.qmd
             - overview.qmd
             - leadership.qmd
-            - signatures.qmd
+            - text: "Signatures Attesting to Integrity"
+              href: Signatures.pdf
             - text: "Institutional Summary"
               href: Summary.pdf
 
     - title: "Requirements"
       contents:
         - requirements.qmd
-        - requirements/Standard 05.4.qmd
-        - requirements/Standard 06.1.qmd
-        - requirements/Standard 06.2.qmd 
-        - requirements/Standard 08.1.qmd
-        - requirements/Standard 08.2.qmd
-        - requirements/Standard 09.1.qmd
-        - requirements/Standard 09.2.qmd
-        - requirements/Standard 10.2.qmd 
-        - requirements/Standard 10.3.qmd
-        - requirements/Standard 10.5.qmd
-        - requirements/Standard 10.6.qmd
-        - requirements/Standard 10.7.qmd
-        - requirements/Standard 10.9.qmd
-        - requirements/Standard 12.1.qmd
-        - requirements/Standard 12.4.qmd
-        - requirements/Standard 13.6.qmd
-        - requirements/Standard 13.7.qmd
-        - requirements/Standard 13.8.qmd
-        - requirements/Standard 14.1.qmd
-        - requirements/Standard 14.3.qmd
-        - requirements/Standard 14.4.qmd
+        - requirements/Standard-05.4.qmd
+        - requirements/Standard-06.1.qmd
+        - requirements/Standard-06.2.b.qmd 
+        - requirements/Standard-06.2.c.qmd 
+        - requirements/Standard-08.1.qmd
+        - requirements/Standard-08.2.a.qmd
+        - requirements/Standard-09.1.qmd
+        - requirements/Standard-09.2.qmd
+        - requirements/Standard-10.2.qmd 
+        - requirements/Standard-10.3.qmd
+        - requirements/Standard-10.5.qmd
+        - requirements/Standard-10.6.qmd
+        - requirements/Standard-10.7.qmd
+        - requirements/Standard-10.9.qmd
+        - requirements/Standard-12.1.qmd
+        - requirements/Standard-12.4.qmd
+        - requirements/Standard-13.6.qmd
+        - requirements/Standard-13.7.qmd
+        - requirements/Standard-13.8.qmd
+        - requirements/Standard-14.1.qmd
+        - requirements/Standard-14.3.qmd
+        - requirements/Standard-14.4.qmd
         
     - title: "QEP"
       contents: 
-        - QEP Impact Report.qmd
+        - QEP-Impact-Report.qmd
     
   navbar:
     logo: images/GenericLogo.png
@@ -87,7 +83,7 @@ website:
       - text: "Requirements"
         href: requirements.qmd
       - text: "QEP"
-        href: QEP Impact Report.qmd
+        href: QEP-Impact-Report.qmd
     tools:
       - icon: question-circle
         href: support.qmd

@@ -3,10 +3,10 @@ profile:
     - [website, pdf, native]
   default: website
   
-# filters:
-#   - accreditation
-#   - fontawesome
-#   - quarto
+filters:
+  - accreditation
+  - fontawesome
+  - quarto
 
 accreditation: 
   # - name: "Accreditation"
@@ -35,11 +35,11 @@ accreditation:
 
   # Specify whether the sources should be sorted alphabetically or by order of appearance
   # Default is "true" (alphabetical)
-  #- sources_sorted: "false"
+  - sources_sorted: "true"
 
   # Specify whether the sources should be listed as the file name or the selected text
   # Default is "false"
-  #- sources_as_filename: "true"
+  - sources_as_filename: "true"
 
   ### LINKs ###
   # Word style used for links to sources/artifacts/evidence
@@ -65,7 +65,7 @@ accreditation:
   # Suffix appended to standards that are core requirements.
   # To include a space, you must escape by enclosing it in \\{ }. Blame Pandoc.
   # Default: ""
-  - standards_core_suffix: "\\{ }(CR)"
+  #- standards_core_suffix: "\\{ }(CR)"
 
   ### JUDGMENT ###
   # Word style used for judgment
@@ -74,6 +74,9 @@ accreditation:
 
   # Hyperlink Evidence Path contains the portion of the URL that indicates the path to the evidence
   # - hyperlink_evidence_path: "/report/EVIDENCE/"
+  
+  - qep_part_content: "Impact Report of the Quality Enhancement Plan"
+  - qep_part_number: 5
   
   # Replace Spaces indicates that all spaces and %20 in links to artifacts (whether initiated by styles or hyperlinks) should be replaced with dashes
   - replace_spaces: "true"

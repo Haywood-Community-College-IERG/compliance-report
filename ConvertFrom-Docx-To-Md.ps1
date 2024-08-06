@@ -28,10 +28,12 @@ param (
     [switch]$evidencefldr_contains_standard = $false,   # RptRoot/_Artifacts/StandardFldr?
     [string]$core_requirement_suffix = "",            # " (CR)"
 
-    [switch]$replace_spaces = $false
+    [switch]$replace_spaces = $false,
+
+    [switch]$debug = $false
 )
 
-$DEBUG = $true
+$DEBUG = $debug
 
 # There are three ways to organize the artifact files:
 # 1. The artifacts are in an artifacts folder within the same folder as the standard
@@ -67,7 +69,7 @@ $core_requirements = @("6.1","8.1","9.1","9.2","12.1")
 $standards_numbers = @(
     "5.4",
     #"6.1", "6.2",
-    #"6.2.a",
+    "6.2.a",
     #"8.1", "8.2",
     #"9.1", "9.2",
     "10.2", "10.3", #"10.5", "10.6", "10.7", "10.9",
@@ -83,11 +85,10 @@ $others = @("Welcome - Website",
             "Overview",
             "Leadership", 
             "Requirements",
-            "Signatures", 
             "Support"
             )
 
-$others_pdf = @("Summary.pdf")
+$others_pdf = @("Signatures.pdf","Summary.pdf")
 
 $standards_input = @()
 $standards_output = @()
@@ -100,7 +101,8 @@ $db_groups = @(
     "GetArtifacts",
     "Standards",
     "GetStdSourceFolder",
-    "Welcome"
+    "Welcome",
+    ""
 )
 
 function dbg {
@@ -257,8 +259,8 @@ function Convert-Evidence-Links { # ignore
 
     # If requested, encode all spaces in the output strings as -
     if ($replace_spaces) {
-        #$input_link = $input_link -replace " ", "-"
         $output_link = $output_link -replace " ", "-"
+        $output_link = $output_link -replace "%20", "-"
     }
 
     $text = Get-Content $fn
@@ -364,7 +366,7 @@ function Get-Artifacts { # ignore
 
     Get-ChildItem -Path $src_fldr_str -File -Name | ForEach-Object {
         if ($_.isdir) {
-            Write-Host "...skipping folder $src_fldr_str/$_.Name"
+            dbg -group "Artifacts" -msg "...skipping folder $src_fldr_str/$_.Name"
             continue
         }
 
@@ -379,7 +381,7 @@ function Get-Artifacts { # ignore
 
         $art_file_path_dst = "$dst_fldr_str/$dst_file"
 
-        Write-Host "...copy $art_file_path_src into $art_file_path_dst"
+        dbg -group "Artifacts" -msg "...copy $art_file_path_src into $art_file_path_dst"
         Copy-Item -Path $art_file_path_src -Destination $art_file_path_dst
     }
 }
@@ -450,11 +452,13 @@ for ($i = 0; $i -lt $std_count; $i++) {
         # Make sure the slashes are all forward slashes
         $artifacts_src_fldr_str = $artifacts_src_fldr_str.Replace("\", "/")
         $artifacts_src_fldr_str = $artifacts_src_fldr_str.Replace($remove_part1, "")
-        $artifacts_src_fldr_str = $artifacts_src_fldr_str.Replace($remove_part2, "")
-
-        if ($replace_spaces) {
-            $artifacts_src_fldr_str = $artifacts_src_fldr_str -replace " ", "-"
+        if ($remove_part2 -ne "") {
+            $artifacts_src_fldr_str = $artifacts_src_fldr_str.Replace($remove_part2, "")
         }
+
+        #if ($replace_spaces) {
+        #    $artifacts_src_fldr_str = $artifacts_src_fldr_str -replace " ", "-"
+        #}
 
         Write-Host "...replace links: $artifacts_src_fldr_str with $output_file"
         Convert-Evidence-Links -fn "$DST_REQ_FLDR_STR/$output_file.qmd" -input_link $artifacts_src_fldr_str -output_link $output_file

@@ -4,17 +4,9 @@ project:
   render:
     - index.qmd
     - requirements/*.qmd
-    - QEP Impact Report.qmd
+    - QEP-Impact-Report.qmd
     - overview.qmd
-    # - leadership.qmd
-    - signatures.qmd
-    - summary.qmd
-
-filters:
-  - accreditation
-  - fontawesome
-  - quarto
-
+    - leadership.qmd
 
 book:
   title: "5th-Year Reaffirmation"
@@ -26,54 +18,88 @@ book:
   downloads: [pdf]
   chapters:
     - index.qmd
+    - leadership.qmd
+    - overview.qmd
     - part: "Signatures Attesting to Integrity" 
       chapters: 
-        - signatures.qmd
+        - Signatures.qmd
     - part: "Institutional Summary Form Prepared for SACSCOC Reviews"
       chapters: 
-        - summary.qmd
-    # - part: "TEMP Support TEMP"
-    #   chapters: 
-    #     - support.qmd
-    - part: "Requirements"
+        - Summary.qmd
+    - part: "Fifth-Year Compliance Certification"
       chapters: 
-        - requirements/Standard 05.4.qmd
-        - requirements/Standard 06.1 (CR).qmd
-        - requirements/Standard 06.2.qmd 
-        - requirements/Standard 08.1 (CR).qmd
-        - requirements/Standard 08.2.qmd
-        - requirements/Standard 09.1 (CR).qmd
-        - requirements/Standard 09.2 (CR).qmd
-        - requirements/Standard 10.2.qmd 
-        - requirements/Standard 10.3.qmd
-        - requirements/Standard 10.5.qmd
-        - requirements/Standard 10.6.qmd
-        - requirements/Standard 10.7.qmd
-        - requirements/Standard 10.9.qmd
-        - requirements/Standard 12.1 (CR).qmd
-        - requirements/Standard 12.4.qmd
-        - requirements/Standard 13.6.qmd
-        - requirements/Standard 13.7.qmd
-        - requirements/Standard 13.8.qmd
-        - requirements/Standard 14.1.qmd
-        - requirements/Standard 14.3.qmd
-        - requirements/Standard 14.4.qmd
+        - requirements/Standard-05.4.qmd
+        - requirements/Standard-06.1.qmd
+        - requirements/Standard-06.2.b.qmd 
+        - requirements/Standard-06.2.c.qmd 
+        - requirements/Standard-08.1.qmd
+        - requirements/Standard-08.2.a.qmd
+        - requirements/Standard-09.1.qmd
+        - requirements/Standard-09.2.qmd
+        - requirements/Standard-10.2.qmd 
+        - requirements/Standard-10.3.qmd
+        - requirements/Standard-10.5.qmd
+        - requirements/Standard-10.6.qmd
+        - requirements/Standard-10.7.qmd
+        - requirements/Standard-10.9.qmd
+        - requirements/Standard-12.1.qmd
+        - requirements/Standard-12.4.qmd
+        - requirements/Standard-13.6.qmd
+        - requirements/Standard-13.7.qmd
+        - requirements/Standard-13.8.qmd
+        - requirements/Standard-14.1.qmd
+        - requirements/Standard-14.3.qmd
+        - requirements/Standard-14.4.qmd
+      
     - part: "Impact Report of the Quality Enhancement Plan"
       chapters: 
-        - QEP Impact Report.qmd
+        - QEP-Impact-Report.qmd
 
 format:
-#  html:
-#    theme: sandstone
-#    number-sections: false
   pdf:
     documentclass: scrreport
+    include-in-header: 
+      text: |
+        \usepackage{pdfpages}
+
+        %% These are the same colors as defined in custom.scss.
+        \definecolor{white}{HTML}{ffffff}
+        \definecolor{gray-100}{HTML}{f8f9fa}
+        \definecolor{gray-200}{HTML}{f8f5f0}
+        \definecolor{gray-300}{HTML}{dfd7ca}
+        \definecolor{gray-400}{HTML}{ced4da}
+        \definecolor{gray-500}{HTML}{98978b}
+        \definecolor{gray-600}{HTML}{8e8c84}
+        \definecolor{gray-700}{HTML}{495057}
+        \definecolor{gray-800}{HTML}{3e3f3a}
+        \definecolor{gray-900}{HTML}{212529}
+        \definecolor{black}{HTML}{000000}
+
+        \definecolor{blue}{HTML}{325d88}
+        \definecolor{indigo}{HTML}{6610f2}
+        \definecolor{purple}{HTML}{6f42c1}
+        \definecolor{pink}{HTML}{e83e8c}
+        \definecolor{red}{HTML}{d9534f}
+        \definecolor{orange}{HTML}{f47c3c}
+        \definecolor{yellow}{HTML}{ffc107}
+        \definecolor{green}{HTML}{93c54b}
+        \definecolor{teal}{HTML}{20c997}
+        \definecolor{cyan}{HTML}{29abe0}
+
+        \definecolor{custom1}{HTML}{7030A0} % Dark Purple
+        \definecolor{custom2}{HTML}{9999FF} % Light Purple
+        \definecolor{custom3}{HTML}{00FFFF} % Aqua
+
     number-sections: true
     number-depth: -1
     toc-depth: 1
     keep-tex: true
-    keep-md: true
-    #latex-clean: false
+    # keep-md: true
+
+    # See https://www.latextemplates.com/svgnames-colors for how to define colors.
+    # These colors re defined above and should match the custom.scss definitions.
+    filecolor: custom1 # This is a normal link to an external file
+    linkcolor: custom2 # This is an internal link to another section in the file
 
 editor: source
 
