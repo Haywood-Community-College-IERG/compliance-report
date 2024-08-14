@@ -11,4 +11,20 @@ REM Use -evidencefldr_contains_standard to specify that the evidence folder cont
 
 REM Use -replace_spaces to replace spaces with dashes in the file names (default: FALSE)
 
+:: Check for the existence of pwsh.exe
+where pwsh.exe >nul 2>&1
+IF %errorlevel% neq 0 (
+    ECHO pwsh.exe not found. Please ensure PowerShell 7 is installed and available in the PATH.
+    ECHO Got to https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows to download.
+    EXIT /b 1
+)
+
+:: Check for the existence of pandoc.exe
+where pandoc.exe >nul 2>&1
+IF %errorlevel% neq 0 (
+    ECHO pandoc.exe not found. Please ensure Pandoc is installed and available in the PATH.
+    ECHO Got to https://github.com/jgm/pandoc/releases to download.
+    EXIT /b 1
+)
+
 pwsh .\ConvertFrom-Docx-To-Md.ps1 -src "" -dst "." -others_source_path "" -qep_source_path "" -standard_prefix_src "" -standard_suffix_src "" -standard_prefix_dest "Standard " -standard_suffix_dest ""  -leading_zeros_dest -evidence_folder "" -evidencefldr_in_standard -core_requirement_suffix "" -replace_spaces

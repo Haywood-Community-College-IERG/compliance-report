@@ -622,7 +622,7 @@ function link_to_artifact(el, artifact_type)
         end
     end
     if fn == nil then
-        qlerror("link_to_artifact_style", "Evidence file not found (" .. loc_evidence .. ")")
+        qlerror("link_to_artifact_style", "Evidence file not found (" .. chapter_heading .. " - " .. loc_evidence .. ")")
     end
 
     qldebug("link_to_artifact_style", "    ...evidence: " .. evidence_txt .. " - " .. loc_evidence .. "  -  " .. evidence_pg)

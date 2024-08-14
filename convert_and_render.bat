@@ -1,23 +1,74 @@
 @ECHO OFF
-@REM ECHO Mapping Compliance Report folder found in %~dp0 to W:\
-@REM CD "%~dp0"
-@REM SUBST W: "%cd%"
-@REM CD W:
 
-ECHO Clean up existing folders.
-DEL /Q /S .\_site\*.* >NUL 2>&1 
-DEL /Q /S .\_book\*.* >NUL 2>&1 
-DEL /Q /S .\documents\*.* >NUL 2>&1 
-DEL /Q /S .\others\*.* >NUL 2>&1 
-DEL /Q /S .\docx\*.* >NUL 2>&1 
+:: Check for the existence of pwsh.exe
+where pwsh.exe >nul 2>&1
+IF %errorlevel% neq 0 (
+    ECHO pwsh.exe not found. Please ensure PowerShell 7 is installed and available in the PATH.
+    ECHO Got to https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows to download.
+    EXIT /b 1
+)
+
+:: Check for the existence of pandoc.exe
+where pandoc.exe >nul 2>&1
+IF %errorlevel% neq 0 (
+    ECHO pandoc.exe not found. Please ensure Pandoc is installed and available in the PATH.
+    ECHO Got to https://github.com/jgm/pandoc/releases to download.
+    EXIT /b 1
+)
+
+:: Check for the existence of pwsh.exe
+where quarto.exe >nul 2>&1
+IF %errorlevel% neq 0 (
+    ECHO quarto.exe not found. Please ensure Quarto 1.5+ is installed and available in the PATH.
+    ECHO Got to https://quarto.org/docs/get-started/ to download.
+    EXIT /b 1
+)
+
+SET TRACE=
+IF "%1"=="trace" SET TRACE=%1
+
+SET CLEANUP=
+IF "%1"=="cleanup" SET CLEANUP=%1
+IF "%1"=="reset" SET CLEANUP=%1
+
+IF "%CLEANUP%"=="reset" (
+    ECHO.
+    ECHO Remove all existing work folders.
+    DEL /Q /S .\requirements\*.* >NUL 2>&1 
+    DEL /Q /S .\documents\*.* >NUL 2>&1 
+    DEL /Q /S .\others\*.* >NUL 2>&1 
+    DEL /Q /S .\docx\*.* >NUL 2>&1 
+)
+IF "%CLEANUP%" NEQ "" (
+    ECHO Remove all existing Quarto folders.
+    DEL /Q /S .\_site\*.* >NUL 2>&1 
+    DEL /Q /S .\_book\*.* >NUL 2>&1 
+    EXIT /b 0
+)
 
 ECHO Migrate Word documents to markdown.
-CMD /C .\ConvertFrom-Docx-To-Md.bat
+IF "%TRACE%"=="trace" (
+    CMD /C 2>ConvertFrom-Docx-To-Md.log 2>&1 (.\ConvertFrom-Docx-To-Md.bat)
+) ELSE (
+    CMD /C .\ConvertFrom-Docx-To-Md.bat
+)
 
 ECHO.
-ECHO Render markdown to website and pdf.
-CMD /C .\render.bat website
-CMD /C .\render.bat pdf
+ECHO Render markdown to website.
+IF "%TRACE%"=="trace" (
+    ECHO Trace mode.
+    CMD /C .\render_log.bat website
+    pwsh .\extract_errors.ps1
+) ELSE (
+    CMD /C .\render.bat website
+)
+ECHO Render markdown to pdf.
+IF "%TRACE%"=="trace" (
+    ECHO Trace mode.
+    CMD /C .\render_log.bat pdf 
+) ELSE (
+    CMD /C .\render.bat pdf
+)
 
 ECHO.
 ECHO Make sure share folder exists.
@@ -35,6 +86,9 @@ ROBOCOPY .\_book .\_ACCRED_SHARE /S /MOVE /NFL /NDL /NJH /NJS /NP /NS /NC
 REM CMD /C COPY /Y .\ACCRED_SHARE_COPY\*.* .\_ACCRED_SHARE
 ROBOCOPY .\_ACCRED_SHARE_COPY .\_ACCRED_SHARE /S /NFL /NDL /NJH /NJS /NP /NS /NC
 
+ECHO.
+ECHO Create zip file.
+CMD /C .\Create-Accred-Zip.bat
 
 REM ECHO.
 REM ECHO Remove old folders.
