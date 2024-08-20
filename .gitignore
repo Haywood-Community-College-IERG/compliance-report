@@ -91,3 +91,12 @@ leadership.ipynb
 *.native
 *.bak
 references.bib
+Welcome---PDF.qmd
+Welcome---Website.qmd
+QEP-Impact-Report.qmd
+index.toc
+index.tex
+index.pdf
+index.log
+index.aux
+extract_errors_website.txt
