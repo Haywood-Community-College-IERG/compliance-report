@@ -46,9 +46,14 @@ IF "%CLEANUP%" NEQ "" (
     EXIT /b 0
 )
 
+IF "%TRACE%"=="trace" (
+    ECHO Tracing output.
+)
+
 ECHO Migrate Word documents to markdown.
 IF "%TRACE%"=="trace" (
-    CMD /C 2>ConvertFrom-Docx-To-Md.log 2>&1 (.\ConvertFrom-Docx-To-Md.bat)
+    ECHO Trace output to ConvertFrom-Docx-To-Md.log.
+    CMD /C .\ConvertFrom-Docx-To-Md.bat >ConvertFrom-Docx-To-Md.log 2>&1 
 ) ELSE (
     CMD /C .\ConvertFrom-Docx-To-Md.bat
 )
@@ -56,7 +61,7 @@ IF "%TRACE%"=="trace" (
 ECHO.
 ECHO Render markdown to website.
 IF "%TRACE%"=="trace" (
-    ECHO Trace mode.
+    ECHO Trace output to trace_website.log.
     CMD /C .\render_log.bat website
     pwsh .\extract_errors.ps1
 ) ELSE (
@@ -64,7 +69,7 @@ IF "%TRACE%"=="trace" (
 )
 ECHO Render markdown to pdf.
 IF "%TRACE%"=="trace" (
-    ECHO Trace mode.
+    ECHO Trace output to trace_pdf.log.
     CMD /C .\render_log.bat pdf 
 ) ELSE (
     CMD /C .\render.bat pdf
@@ -83,7 +88,6 @@ ECHO.
 ECHO Move new files to share folder.
 ROBOCOPY .\_site .\_ACCRED_SHARE\_site /S /MOVE /NFL /NDL /NJH /NJS /NP /NS /NC
 ROBOCOPY .\_book .\_ACCRED_SHARE /S /MOVE /NFL /NDL /NJH /NJS /NP /NS /NC
-REM CMD /C COPY /Y .\ACCRED_SHARE_COPY\*.* .\_ACCRED_SHARE
 ROBOCOPY .\_ACCRED_SHARE_COPY .\_ACCRED_SHARE /S /NFL /NDL /NJH /NJS /NP /NS /NC
 
 ECHO.
