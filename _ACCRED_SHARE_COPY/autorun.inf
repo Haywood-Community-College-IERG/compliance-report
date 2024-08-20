@@ -1,0 +1,4 @@
+[Autorun]
+open=_site\index.html
+action=_site\index.html
+icon=_site\images\Mountain.png
