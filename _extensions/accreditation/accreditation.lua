@@ -334,7 +334,7 @@ function insert_zero(prefix_str, str)
     return rtn
 end
     
-function make_link(path, evidence, evidence_pg, evidence_txt)
+function make_link(path, evidence, evidence_pg, evidence_txt, processing_standard)
     qldebug("make_link", "    ...path: " .. path)
     qldebug("make_link", "    ...evidence: " .. evidence)
     qldebug("make_link", "    ...evidence_pg: " .. evidence_pg)
@@ -344,14 +344,19 @@ function make_link(path, evidence, evidence_pg, evidence_txt)
 
     local target_attr = "" -- {}
 
+    if processing_standard==nil then
+        processing_standard = false
+    end
+
     evidence_txt = evidence_txt:gsub("%%20", " ")
 
     -- Create the link to the evidence file as markdown. This will replace the former text.
     if output_format == "html" then 
-        if file_being_processed:lower()~="requirements.qmd" and artifact_target ~= "" then 
+        if chapter_heading_attr~="" and artifact_target ~= "" and not processing_standard then 
             --target_attr = {target = artifact_target}
             target_attr = " target=\"" .. artifact_target .. "\""
-
+        else
+            target_attr = " target=\"_self\""
         end
 
         --rtn_str = pandoc.Link(evidence_txt, path .. evidence .. evidence_pg, evidence_txt, target_attr)
@@ -676,7 +681,7 @@ function link_to_artifact(el, artifact_type)
 end
 
 function link_to_standard(el)
-    local loc_standards_path = standards_path:gsub("\\","/")
+    local loc_standards_path = standards_path:gsub("\\","/") .. "/"
 
     -- evidence_txt_orig contains the original text in the reference
     -- evidence_txt contains the text in the reference up to the section
@@ -692,6 +697,7 @@ function link_to_standard(el)
     local evidence_sec = ""
     local loc_chapter_heading_attr = ""
     local loc_output_format = output_format
+    local loc_section_ref = ""
 
     -- Remove leading zeros in evidence text - that is, Standard 05.4 should become Standard 5.4
     evidence_txt = evidence_txt:gsub("Standard 0", "Standard ")
@@ -723,24 +729,24 @@ function link_to_standard(el)
 
         -- Convert the path to contain only /. 
         qpd = quarto.project.directory:gsub("\\","/")
+        local usedir = (qpd .. "/" .. loc_standards_path .. "/"):gsub("\\","/"):gsub("//","/")
         qldebug("link_standard_style", "    ...quarto.project.directory: " .. qpd )
+        qldebug("link_standard_style", "    ...loc_standards_path(1): [" .. loc_standards_path .."]" )
 
-        -- If quarto.doc.input_file contains standards_path, then set loc_standards_path to ""
-        qdi = pandoc.path.directory(quarto.doc.input_file:gsub("\\","/"))
-        qldebug("link_standard_style", "    ...quarto.doc.input_file: " .. qdi ) 
-        if string.find(qdi, loc_standards_path, 1, true) then
+        -- If processing a Standard file, then set loc_standards_path to ""
+        -- This is because Requirements.qmd is in the root folder and needs to redirect to the standards folder
+        --    while a standard only needs to refer to the same folder.
+        if chapter_heading_attr ~= "" then
+            qldebug("link_standard_style", "    ...processing a standard" ) 
             loc_standards_path = ""
         end
-        -- Now add a trailing / if loc_standards_path is not empty
-        if loc_standards_path ~= "" then
-            loc_standards_path = loc_standards_path .. "/"
-        end
-        
-        qldebug("link_standard_style", "    ...loc_standards_path: [" .. loc_standards_path .."]" )
+
+        qldebug("link_standard_style", "    ...loc_standards_path(2): [" .. loc_standards_path .."]" )
 
         -- Check for existence of referenced standards file in the loc_standards_path directory.
         --files = pandoc.system.list_directory(quarto.project.directory .. "/" .. standards_path)
-        files = pandoc.system.list_directory(quarto.project.directory .. "/" .. loc_standards_path)
+        qldebug("link_standard_style", "    ...searching folder: " .. usedir)
+        files = pandoc.system.list_directory(usedir)
         local fn = nil
 
         local loc_standards_core_suffix = standards_core_suffix
@@ -773,16 +779,19 @@ function link_to_standard(el)
 
         end
 
+        if evidence_sec ~= "" then
+            loc_section_ref = "#" .. evidence_txt:lower() .. "--" .. evidence_sec
+            loc_section_ref = loc_section_ref:gsub(" ", "-")
+        end
+
         evidence = evidence .. ".html"
-        rtn_str = make_link(loc_standards_path, evidence, "", evidence_txt)
+        rtn_str = make_link(loc_standards_path, evidence, loc_section_ref, evidence_txt, true)
 
     elseif output_format == "pdf" or output_format == "latex" then
         loc_output_format = "latex"
         if evidence_sec ~= "" then
             loc_chapter_heading_attr = loc_chapter_heading_attr .. "--" .. evidence_sec
-            if replace_spaces then
-                loc_chapter_heading_attr = loc_chapter_heading_attr:gsub(" ", "-")
-            end
+            loc_chapter_heading_attr = loc_chapter_heading_attr:gsub(" ", "-")
         end
         --rtn_str = make_link("", loc_chapter_heading_attr, "", evidence_txt)
         rtn_str = "\\hyperref[" .. loc_chapter_heading_attr .. "]{" .. evidence_txt .. "}"
@@ -1062,7 +1071,7 @@ local filter = {
                 --el_target_part1 = el_target:sub(1, idx - 1)
                 el_target = el_target:sub(endpos + 1, el_target:len())
             else
-                qlerror("LINK", "Hyperlink Evidence Path not found in target (" .. chapter_heading .. " - " .. el_target .. ")")
+                qlerror("LINK", "Hyperlink Evidence Path not found in target (" .. chapter_heading .. " - " .. pandoc.utils.stringify(el.content) .. " -- " .. el_target .. ")")
             end
             qldebug("LINK", "    ...el_target(1): " .. el_target)
 
@@ -1101,6 +1110,7 @@ local filter = {
             elseif output_format == "pdf" then
                 el_target = site_indirect .. site_path .. "/" .. el_target
             end
+            el_target = el_target:gsub("//", "/")
             qldebug("LINK", "    ...el_target(5): " .. el_target)
         
             if sources_as_filename then
