@@ -9,12 +9,14 @@ project:
     - leadership.qmd
 
 book:
-  title: "5th-Year Reaffirmation"
-  author: "Author"
+  title: "SACSCOC Fifth-Year Interim Report"
+  author: "\\small Contact: Contact Name, \\protect\\linebreak Contact Title, \\protect\\linebreak Contact Phone"
+  date: "9/8/2024"
+  subtitle: "School Name \\protect\\linebreak School Street Address \\protect\\linebreak School City, ST ZIP"
+
   sidebar:
     style: docked
     logo: images/GenericLogo.png
-  date: "1/11/2024"
   downloads: [pdf]
   chapters:
     - index.qmd
@@ -86,14 +88,17 @@ format:
         \definecolor{teal}{HTML}{20c997}
         \definecolor{cyan}{HTML}{29abe0}
 
+        % School colors go here
         \definecolor{custom1}{HTML}{7030A0} % Dark Purple
         \definecolor{custom2}{HTML}{9999FF} % Light Purple
         \definecolor{custom3}{HTML}{00FFFF} % Aqua
 
+
+
     number-sections: true
     number-depth: -1
     toc-depth: 1
-    keep-tex: true
+    # keep-tex: true
     # keep-md: true
 
     # See https://www.latextemplates.com/svgnames-colors for how to define colors.
