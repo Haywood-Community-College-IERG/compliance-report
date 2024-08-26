@@ -71,9 +71,7 @@ rsconnect/
 /renv.lock
 /requirements.qmd
 /signatures.pdf.md
-/signatures.qmd
 /summary.pdf.md
-/summary.qmd
 /support.qmd
 /trace_pdf.log
 /trace_website.log
