@@ -11,9 +11,9 @@ $OutputFileName = "extract_errors_$Type.txt"
 # Read the log file line by line
 Get-Content $InputFileName | ForEach-Object {
     # Check if the line starts with the specified pattern
-    if ($_ -match "^\(D\) accreditation: \[.*\]: \(ERROR\) Evidence file not found (.*)$") {
+    if ($_ -match "^\(D\) accreditation: \[.*\]: \(ERROR\) .* not found.* (.*)$") {
         # Extract the portion contained in parentheses
-        $errormatches = [regex]::Match($_, "\(D\) accreditation: \[.*\]: \(ERROR\) Evidence file not found \((.*)\)$")
+        $errormatches = [regex]::Match($_, "\(D\) accreditation: \[.*\]: \(ERROR\) .* not found.* \((.*)\)$")
         if ($errormatches.Success) {
             # Output the extracted portion
             $errormatches.Groups[1].Value

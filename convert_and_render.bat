@@ -67,12 +67,25 @@ IF "%TRACE%"=="trace" (
 ) ELSE (
     CMD /C .\render.bat website
 )
+
+@REM If the previous batch file returns an error, exit with error code.
+IF ERRORLEVEL 1 (
+    ECHO Error occurred during rendering. Exiting.
+    EXIT /b 1
+)
+
 ECHO Render markdown to pdf.
 IF "%TRACE%"=="trace" (
     ECHO Trace output to trace_pdf.log.
     CMD /C .\render_log.bat pdf 
 ) ELSE (
     CMD /C .\render.bat pdf
+)
+
+@REM If the previous batch file returns an error, exit with error code.
+IF ERRORLEVEL 1 (
+    ECHO Error occurred during rendering. Exiting.
+    EXIT /b 1
 )
 
 ECHO.

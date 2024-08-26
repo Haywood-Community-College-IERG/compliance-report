@@ -348,6 +348,7 @@ function Convert-Docx {
     $text = $text -replace "%7C", "|"
     $text = $text -replace "%7D", "}"
     $text = $text -replace "%7E", "~"
+    $text = $text -replace "’", "'"
 
     # Write the modified text back to the file
     $text | Out-File $std_md_path
@@ -378,6 +379,9 @@ function Get-Artifacts { # ignore
         } else {
             $dst_file = $_
         }
+
+        # Replace ’ character with ' (Word likes to use the fancy quote character but we fix it in the file)
+        $dst_file = $dst_file -replace "’", "'"
 
         $art_file_path_dst = "$dst_fldr_str/$dst_file"
 
