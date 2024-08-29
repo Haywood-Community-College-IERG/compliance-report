@@ -11,6 +11,8 @@ param (
 
     [string]$others_source_path = "", # "Other Supporting Documents",
     [string]$qep_source_path = "", # "QEP Impact Report",
+    [string]$others_copy_path = ".\_ACCRED_SHARE_COPY",
+    [string]$images_copy_path = ".\images_copy",
 
     # A value of "Standard " would be "Standard 05.4" or "Standard 5.4"
     [string]$standard_prefix_src = "",           # "Standard",
@@ -78,7 +80,7 @@ $standards_numbers = @(
     "14.1", "14.3", "14.4"
 )
 
-$qep = "QEP Impact Report"
+$qep_files = @("QEP Impact Report", "QEP Executive Summary")
 
 $others = @("Welcome - Website", 
             "Welcome - PDF",
@@ -89,7 +91,7 @@ $others = @("Welcome - Website",
             "Support"
             )
 
-$others_copy = @("Signatures.pdf","Signatures.qmd","Summary.pdf","Summary.qmd")
+$others_copy = @("Signatures.pdf", "Signatures.qmd", "Summary.pdf", "Summary.qmd")
 
 $standards_input = @()
 $standards_output = @()
@@ -487,21 +489,33 @@ if ($files) {
     Get-Artifacts -src_fldr_str $artifacts_src_fldr_str -dst_fldr_str $artifacts_dst_fldr_str
 }
 
-Write-Host "Processing $qep"
+Write-Host "Processing QEP files"
 
-if ($qep_source_path) {
-    $qep_fldr = $qep_source_path
-} else {
-    $qep_fldr = $SOURCE_ROOT_PATH
+foreach ($qep_file in $qep_files) {
+    Write-Host "Processing $qep_file"
+
+    if ($qep_source_path) {
+        $qep_fldr = $qep_source_path
+    } else {
+        $qep_fldr = $SOURCE_ROOT_PATH
+    }
+      
+    $qep_output_file = $qep_file
+
+    # Rename the markdown file to replace spaces with dashes
+    if ($replace_spaces) {
+        $qep_output_file = $qep_output_file -replace " ", "-"
+    }
+
+    if (Test-Path -Path "$qep_fldr\$qep_file.docx") {
+        Write-Host "Converting $qep_fldr\$qep_file.docx to $qep_output_file.qmd"
+        Convert-Docx -std_str $qep_file -std_fldr $qep_fldr -dst_path $DEST_ROOT_PATH -output_file $qep_output_file
+    } else {
+        Write-Host "$qep_fldr\$qep_file.docx not found. Skipping."
+    }
+
 }
 
-$qep_output_file = $qep
-# Rename the markdown file to replace spaces with dashes
-if ($replace_spaces) {
-    $qep_output_file = $qep_output_file -replace " ", "-"
-}
-
-Convert-Docx -std_str $qep -std_fldr $qep_fldr -dst_path $DEST_ROOT_PATH -output_file $qep_output_file
 
 foreach ($other in $others) {
     Write-Host "Processing $other"
@@ -518,7 +532,13 @@ foreach ($other in $others) {
         $other_output_file = $other_output_file -replace " ", "-"
     }
 
-    Convert-Docx -std_str $other -std_fldr $others_fldr -dst_path $DEST_ROOT_PATH -output_file $other_output_file
+    if (Test-Path -Path "$others_fldr\$other.docx") {
+        Write-Host "Converting $others_fldr\$other.docx to $other_output_file.qmd"
+        Convert-Docx -std_str $other -std_fldr $others_fldr -dst_path $DEST_ROOT_PATH -output_file $other_output_file
+    } else {
+        Write-Host "$others_fldr\$other.docx not found. Skipping."
+    }
+
 }
 
 $index_md_path = "$DEST_ROOT_PATH/index.qmd"
@@ -559,8 +579,9 @@ if (Test-Path -Path $welcome_md_path) {
     
 }
 
+Write-Host "Copy the other supporting documents"
 foreach ($other in $others_copy) {
-    Write-Host "Processing $other"
+    Write-Host "Copying $other"
 
     if ($others_source_path) {
         $others_fldr = $others_source_path
@@ -578,7 +599,14 @@ foreach ($other in $others_copy) {
     Copy-Item -Path "$($others_fldr)\$($other)" -Destination $other_output_file
 }
 
-if (Test-Path -Path ".\images_copy") {
-    Write-Host "Copying images from .\images_copy to .\images"
-    Copy-Item -Path ".\images_copy\*" -Destination ".\images" -Force
+Write-Host "Copy the standard image files"
+if (Test-Path -Path "$images_copy_path") {
+    Write-Host "Copying images from $images_copy_path to .\images"
+    Copy-Item -Path "$images_copy_path\*" -Destination ".\images" -Force
+}
+
+Write-Host "Copy the standard documents"
+if (Test-Path -Path "$others_copy_path") {
+    Write-Host "Copying file from $others_copy_path to .\ACRED_SHARE_COPY"
+    Copy-Item -Path "$others_copy_path\*" -Destination ".\ACRED_SHARE_COPY" -Force
 }

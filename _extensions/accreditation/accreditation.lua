@@ -349,7 +349,7 @@ function make_link(path, evidence, evidence_pg, evidence_txt, processing_standar
 
     -- Create the link to the evidence file as markdown. This will replace the former text.
     if output_format == "html" then 
-        if chapter_heading_attr~="" and artifact_target ~= "" and not processing_standard then 
+        if chapter_heading_attr ~= "" and artifact_target == "_blank" and not processing_standard then 
             --target_attr = {target = artifact_target}
             target_attr = " target=\"" .. artifact_target .. "\""
         else
@@ -360,7 +360,7 @@ function make_link(path, evidence, evidence_pg, evidence_txt, processing_standar
         rtn_str = "<a href=\"" .. path .. evidence .. evidence_pg .. "\" " .. target_attr .. " >" .. evidence_txt .. "</a>"
 
     elseif output_format == "pdf" or output_format == "latex" or output_format == "tex" then
-        if not processing_standard and artifact_target ~= ""then 
+        if chapter_heading_attr ~= "" and artifact_target == "_blank" and not processing_standard then 
             new_window_opt = "[pdfnewwindow=true]"
         else
             new_window_opt = ""
@@ -1129,11 +1129,13 @@ local filter = {
 
     Image = function(el)
         qldebug("IMAGE", "    ...el: " .. dump(el))
+        qldebug("IMAGE", "    ...root_dir: " .. root_dir)
+        qldebug("IMAGE", "    ...el.src(1): " .. el.src)
         -- replace the '.' with the root_dir
         el.src = pandoc.path.normalize( root_dir .. "/" .. el.src )
         -- remove standards_path from the el.src
         el.src = string.gsub(el.src, standards_path, "")
-        qldebug("IMAGE", "    ...el.src: " .. el.src)
+        qldebug("IMAGE", "    ...el.src(2): " .. el.src)
         return el
     end,
 
