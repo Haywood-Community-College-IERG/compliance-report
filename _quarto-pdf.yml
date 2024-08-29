@@ -3,14 +3,17 @@ project:
 
   render:
     - index.qmd
-    - requirements/*.qmd
-    - QEP-Impact-Report.qmd
     - overview.qmd
     - leadership.qmd
+    - Support.qmd
+    - requirements/*.qmd
+    - QEP-Impact-Report.qmd
 
 book:
   title: "SACSCOC Fifth-Year Interim Report"
-  author: "\\small Contact: Contact Name, \\protect\\linebreak Contact Title, \\protect\\linebreak Contact Phone"
+  author: 
+    - "\\small Contact: Contact Name1, \\protect\\linebreak Contact Title1, \\protect\\linebreak Contact Phone1"
+    - "\\small Contact: Contact Name2, \\protect\\linebreak Contact Title2, \\protect\\linebreak Contact Phone2"
   date: "9/8/2024"
   subtitle: "School Name \\protect\\linebreak School Street Address \\protect\\linebreak School City, ST ZIP"
 
@@ -20,8 +23,9 @@ book:
   downloads: [pdf]
   chapters:
     - index.qmd
-    - leadership.qmd
     - overview.qmd
+    - leadership.qmd
+    - Support.qmd
     - part: "Signatures Attesting to Integrity" 
       chapters: 
         - Signatures.qmd
@@ -92,8 +96,6 @@ format:
         \definecolor{custom1}{HTML}{7030A0} % Dark Purple
         \definecolor{custom2}{HTML}{9999FF} % Light Purple
         \definecolor{custom3}{HTML}{00FFFF} % Aqua
-
-
 
     number-sections: true
     number-depth: -1

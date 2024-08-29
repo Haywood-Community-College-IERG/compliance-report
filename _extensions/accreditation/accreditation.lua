@@ -9,7 +9,6 @@ local debug = "warning" -- can be blank or "error"
 
 local root_dir = ""
 local file_being_processed = ""
-local file_being_processed_core = ""
 
 local chapter_heading = ""
 local chapter_heading_zero = ""
@@ -55,7 +54,6 @@ local link_to_artifact_resume_suffix_sep = ""
 
 local link_standard_style = "Link to Standard"
 
-local hyperlink_style = "Hyperlink"
 local hyperlink_evidence_path = ""
 local replace_spaces = true
 
@@ -88,7 +86,6 @@ local trace_options = { "link_to_artifact_style",
                         --"link_to_artifact_style:sources_list",
                         "link_standard_style", 
                         "make_link",
-                        --"hyperlink_style",
                         "add_to_sources",
                         --"unitcode_style",
                         --"isfile",
@@ -363,7 +360,12 @@ function make_link(path, evidence, evidence_pg, evidence_txt, processing_standar
         rtn_str = "<a href=\"" .. path .. evidence .. evidence_pg .. "\" " .. target_attr .. " >" .. evidence_txt .. "</a>"
 
     elseif output_format == "pdf" or output_format == "latex" or output_format == "tex" then
-        rtn_str = "\\href{" .. path .. evidence .. evidence_pg .. "}{{" .. evidence_txt .. "}}"
+        if not processing_standard and artifact_target ~= ""then 
+            new_window_opt = "[pdfnewwindow=true]"
+        else
+            new_window_opt = ""
+        end
+        rtn_str = "\\href".. new_window_opt .."{" .. path .. evidence .. evidence_pg .. "}{{" .. evidence_txt .. "}}"
         --rtn_str = pandoc.Link(evidence_txt, path .. evidence .. evidence_pg, evidence_txt, {target = artifact_target})
         loc_output_format = "latex"
     else 
@@ -436,9 +438,10 @@ function add_to_sources2(sources_list, content, target, title)
     
 end
 
-function add_to_sources(sources_list, src)
+function add_to_sources(sources_list, src, name)
     local loc_link = src -- pandoc.Link(pandoc.Str(src), src, "")
     local loc_link_str = li_start .. pandoc.utils.stringify(loc_link) .. li_end
+    local loc_name_str = pandoc.utils.stringify(name)
 
     qldebug("add_to_sources", "Add to sources: " .. dump(loc_link))
     qldebug("add_to_sources", "Add to sources: " .. loc_link_str)
@@ -446,24 +449,26 @@ function add_to_sources(sources_list, src)
     -- Build up the list of sources. These will be managed below under the Sources Block
     if sources_sorted then
         local disp = nil
-        local loc_sources_list_i = ""
+        local loc_sources_sort_list_i = ""
         if #sources_list == 0 then
             table.insert(sources_list, 1, li_start .. loc_link .. li_end)
+            table.insert(sources_sort_list, 1, loc_name_str)
             --table.insert(sources_list, 1, src)
             qldebug("add_to_sources", "    ...first table insert: " .. dump(loc_link))
             disp = 1
 
         else
             for i = 1, #sources_list do
-                loc_sources_list_i = pandoc.utils.stringify(sources_list[i])
-                if loc_sources_list_i == loc_link_str then
-                    qldebug("add_to_sources", "    ...source already exists(" .. i .. "): " .. loc_link_str)
+                loc_sources_sort_list_i = pandoc.utils.stringify(sources_sort_list[i])
+                if loc_sources_sort_list_i == loc_name_str then
+                    qldebug("add_to_sources", "    ...source already exists(" .. i .. "): N:" .. loc_name_str .. ", LS:" .. loc_link_str)
                     disp = i
                     break
 
-                elseif loc_sources_list_i > loc_link_str then
-                    qldebug("add_to_sources", "    ...insert source(" .. i .. "): LS:" .. loc_link_str .. ", SL:" .. sources_list[i])
+                elseif loc_sources_sort_list_i > loc_name_str then
+                    qldebug("add_to_sources", "    ...insert source(" .. i .. "): N:" .. loc_name_str .. ", LS:" .. loc_link_str .. ", SL:" .. sources_list[i])
                     table.insert(sources_list, i, li_start .. loc_link .. li_end)
+                    table.insert(sources_sort_list, i, loc_name_str)
                     disp = i
                     break
 
@@ -477,15 +482,17 @@ function add_to_sources(sources_list, src)
         end
 
         if disp == nil then
-            qldebug("add_to_sources", "    ...append source: " .. loc_link_str)
+            qldebug("add_to_sources", "    ...append source: N:" .. loc_name_str .. ", LS:" .. loc_link_str)
             table.insert(sources_list, #sources_list + 1, li_start .. loc_link .. li_end)
+            table.insert(sources_sort_list, #sources_sort_list + 1, loc_name_str)
             disp = #sources_list
 
         end
 
     else
-        qldebug("add_to_sources", "    ...append source: " .. loc_link_str)
+        qldebug("add_to_sources", "    ...append source: N:" .. loc_name_str .. ", LS:" .. loc_link_str)
         table.insert(sources_list, #sources_list + 1, li_start .. loc_link .. li_end)
+        table.insert(sources_sort_list, #sources_sort_list + 1, loc_name_str)
 
     end
     
@@ -673,7 +680,7 @@ function link_to_artifact(el, artifact_type)
     qldebug("link_to_artifact_style", "    ...rtn_str_srcs: " .. dump(rtn_str_srcs))
 
     -- Add the evidence to the sources list
-    add_to_sources(sources_list, rtn_str_srcs)
+    add_to_sources(sources_list, rtn_str_srcs, content)
     --add_to_sources2(sources_list, content, src_path, evidence)
     qldebug("link_to_artifact_style:sources_list", "sources_list(" .. #sources_list .. "): " .. dump(sources_list))
 
@@ -862,22 +869,30 @@ local filter = {
                 qep_part_number = math.floor(tonumber(pandoc.utils.stringify(sub_attr.name)) or error("Could not cast '" .. tostring(pandoc.utils.stringify(sub_attr.name)) .. "' to number.'"))
                 qldebug("META", "Check Meta - qep_part_number: " .. qep_part_number)
 
+            elseif sub_attr.id == "judgment_style" then
+                judgment_style = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - judgment_style style: " .. judgment_style)
+
             -- Handle SOURCES YAML attributes
             elseif sub_attr.id == "sources_style" then
                 sources_style = pandoc.utils.stringify(sub_attr.name)
-                qldebug("META", "Check Meta - sources style: " .. sources_style)
+                qldebug("META", "Check Meta - sources_style: " .. sources_style)
 
             elseif sub_attr.id == "sources_header" then
                 sources_header = pandoc.utils.stringify(sub_attr.name)
-                qldebug("META", "Check Meta - sources name: " .. sources_header)
+                qldebug("META", "Check Meta - sources_header: " .. sources_header)
 
             elseif sub_attr.id == "sources_path" then
                 sources_path = pandoc.path.make_relative(pandoc.utils.stringify(sub_attr.name), quarto.doc.input_file)
-                qldebug("META", "Check Meta - sources path: " .. sources_path)
+                qldebug("META", "Check Meta - sources_path: " .. sources_path)
+
+            elseif sub_attr.id == "sources_path_sub" then
+                sources_path_sub = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - sources_path_sub: " .. sources_path_sub)
 
             elseif sub_attr.id == "sources_sorted" then
                 sources_sorted = (pandoc.utils.stringify(sub_attr.name) == "true")
-                qldebug("META", "Check Meta - sources path: " .. pandoc.utils.stringify(sources_sorted))
+                qldebug("META", "Check Meta - sources_sorted: " .. pandoc.utils.stringify(sources_sorted))
 
             elseif sub_attr.id == "sources_as_filename" then
                 sources_as_filename = (pandoc.utils.stringify(sub_attr.name) == "true")
@@ -891,6 +906,34 @@ local filter = {
             elseif sub_attr.id == "link_standard_style" then
                 link_standard_style = pandoc.utils.stringify(sub_attr.name)
                 qldebug("META", "Check Meta - link_standard_style: " .. link_standard_style)
+
+            elseif sub_attr.id == "unitcode_style" then
+                unitcode_style = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - unitcode_style: " .. unitcode_style)
+
+            elseif sub_attr.id == "link_to_artifact_assessment_style" then
+                link_to_artifact_assessment_style = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_assessment_style: " .. link_to_artifact_assessment_style)
+
+            elseif sub_attr.id == "link_to_artifact_assessment_sep" then
+                link_to_artifact_assessment_sep = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_assessment_sep: " .. link_to_artifact_assessment_sep)
+
+            elseif sub_attr.id == "link_to_artifact_assessment_suffix" then
+                link_to_artifact_assessment_suffix = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_assessment_suffix: " .. link_to_artifact_assessment_suffix)
+
+            elseif sub_attr.id == "link_to_artifact_review_style" then
+                link_to_artifact_review_style = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_review_style: " .. link_to_artifact_review_style)
+
+            elseif sub_attr.id == "link_to_artifact_review_sep" then
+                link_to_artifact_review_sep = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_review_sep: " .. link_to_artifact_review_sep)
+
+            elseif sub_attr.id == "link_to_artifact_review_suffix" then
+                link_to_artifact_review_suffix = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_review_suffix: " .. link_to_artifact_review_suffix)
 
             elseif sub_attr.id == "standards_path" then
                 standards_path = pandoc.path.make_relative(pandoc.utils.stringify(sub_attr.name), quarto.doc.input_file)
@@ -927,6 +970,10 @@ local filter = {
                 link_to_artifact_job_suffix = pandoc.utils.stringify(sub_attr.name)
                 qldebug("META", "Check Meta - link_to_artifact_job_suffix: " .. link_to_artifact_job_suffix)
 
+            elseif sub_attr.id == "link_to_artifact_job_suffix_sep" then
+                link_to_artifact_job_suffix_sep = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_job_suffix_sep: " .. link_to_artifact_job_suffix_sep)
+
             elseif sub_attr.id == "link_to_artifact_resume_prefix" then
                 link_to_artifact_resume_prefix = pandoc.utils.stringify(sub_attr.name)
                 qldebug("META", "Check Meta - link_to_artifact_resume_prefix: " .. link_to_artifact_resume_prefix)
@@ -934,6 +981,14 @@ local filter = {
             elseif sub_attr.id == "link_to_artifact_resume_prefix_sep" then
                 link_to_artifact_resume_prefix_sep = pandoc.utils.stringify(sub_attr.name)
                 qldebug("META", "Check Meta - link_to_artifact_resume_prefix_sep: " .. link_to_artifact_resume_prefix_sep)
+
+            elseif sub_attr.id == "link_to_artifact_resume_suffix" then
+                link_to_artifact_resume_suffix = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_resume_suffix: " .. link_to_artifact_resume_suffix)
+
+            elseif sub_attr.id == "link_to_artifact_resume_suffix_sep" then
+                link_to_artifact_resume_suffix_sep = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - link_to_artifact_resume_suffix_sep: " .. link_to_artifact_resume_suffix_sep)
 
                 --hyperlink_evidence_path
             elseif sub_attr.id == "hyperlink_evidence_path" then
@@ -944,6 +999,45 @@ local filter = {
             elseif sub_attr.id == "replace_spaces" then
                 replace_spaces = (pandoc.utils.stringify(sub_attr.name) == "true")
                 qldebug("META", "Check Meta - replace_spaces: " .. pandoc.utils.stringify(replace_spaces))
+                
+            elseif sub_attr.id == "sources_html_open" then
+                sources_html_open = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - sources_html_open: " .. sources_html_open)
+                
+            elseif sub_attr.id == "sources_html_start" then
+                sources_html_start = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - sources_html_start: " .. sources_html_start)
+                
+            elseif sub_attr.id == "sources_html_end" then
+                sources_html_end = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - sources_html_end: " .. sources_html_end)
+                
+            elseif sub_attr.id == "sources_html_close" then
+                sources_html_close = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - sources_html_close: " .. sources_html_close)
+                
+            elseif sub_attr.id == "sources_pdf_open" then
+                sources_pdf_open = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - sources_pdf_open: " .. sources_pdf_open)
+                
+            elseif sub_attr.id == "sources_pdf_start" then
+                sources_pdf_start = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - sources_pdf_start: " .. sources_pdf_start)
+                
+            elseif sub_attr.id == "sources_pdf_end" then
+                sources_pdf_end = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - sources_pdf_end: " .. sources_pdf_end)
+                
+            elseif sub_attr.id == "sources_pdf_close" then
+                sources_pdf_close = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - sources_pdf_close: " .. sources_pdf_close)
+
+            elseif sub_attr.id == "debug_lua" then
+                debug = pandoc.utils.stringify(sub_attr.name)
+                qldebug("META", "Check Meta - debug_lua: " .. debug)
+
+            elseif sub_attr.id == "trace_options" then
+                qldebug("META", "Check Meta - trace_options: Would love to include these but need to figure out how to pass a table from the YAML to the Lua filter")
                 
             end
         end
@@ -973,7 +1067,6 @@ local filter = {
                 chapter_heading_attr = string.gsub(chapter_heading_attr, "-0", "-")
 
                 file_being_processed = el_content_zero .. ".qmd"
-                file_being_processed_core = el_content_zero .. standards_core_suffix .. ".qmd"
                 sources_path_sub = el_content_zero
                 sources_path_core_sub = el_content_zero .. standards_core_suffix
             else
@@ -984,12 +1077,12 @@ local filter = {
                 chapter_heading_attr = ""
 
                 file_being_processed = ""
-                file_being_processed_core = ""
                 sources_path_sub = ""
                 sources_path_core_sub = ""
             end
 
             sources_list = pandoc.List()
+            sources_sort_list = pandoc.List()
 
             if output_format == "pdf" or output_format == "latex" then
                 qldebug("HEADER 1", "    ...Processing latex")

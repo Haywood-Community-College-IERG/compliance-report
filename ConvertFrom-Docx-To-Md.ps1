@@ -82,13 +82,14 @@ $qep = "QEP Impact Report"
 
 $others = @("Welcome - Website", 
             "Welcome - PDF",
+            "Welcome",
             "Overview",
             "Leadership", 
             "Requirements",
             "Support"
             )
 
-$others_pdf = @("Signatures.pdf","Summary.pdf")
+$others_copy = @("Signatures.pdf","Signatures.qmd","Summary.pdf","Summary.qmd")
 
 $standards_input = @()
 $standards_output = @()
@@ -520,34 +521,45 @@ foreach ($other in $others) {
     Convert-Docx -std_str $other -std_fldr $others_fldr -dst_path $DEST_ROOT_PATH -output_file $other_output_file
 }
 
+$index_md_path = "$DEST_ROOT_PATH/index.qmd"
+$welcome_md_path = "$DEST_ROOT_PATH/Welcome.qmd"
+
 # Combine the Welcome - Website.qmd and Welcome - PDF.qmd files
-if ($replace_spaces) {
-    $welcome_website_md_path = "$DEST_ROOT_PATH/Welcome---Website.qmd"
-    $welcome_pdf_md_path = "$DEST_ROOT_PATH/Welcome---PDF.qmd"
+if (Test-Path -Path $welcome_md_path) {
+
+    Move-Item -Path $welcome_md_path -Destination $index_md_path -Force
+
+    Write-Host "Creating $index_md_path from $welcome_md_path"
+
 } else {
-    $welcome_website_md_path = "$DEST_ROOT_PATH/Welcome - Website.qmd"
-    $welcome_pdf_md_path = "$DEST_ROOT_PATH/Welcome - PDF.qmd"
+    if ($replace_spaces) {
+        $welcome_website_md_path = "$DEST_ROOT_PATH/Welcome---Website.qmd"
+        $welcome_pdf_md_path = "$DEST_ROOT_PATH/Welcome---PDF.qmd"
+    } else {
+        $welcome_website_md_path = "$DEST_ROOT_PATH/Welcome - Website.qmd"
+        $welcome_pdf_md_path = "$DEST_ROOT_PATH/Welcome - PDF.qmd"
+    }
+
+    $welcome_website_md = Get-Content $welcome_website_md_path -Raw
+    $welcome_pdf_md = Get-Content $welcome_pdf_md_path -Raw
+
+    $div_start_website = "::: {.content-visible when-profile=`"website`"}`n"
+    $div_start_pdf = "`n::: {.content-visible when-profile=`"pdf`"}`n"
+    $div_end = "`n:::`n"
+
+    $welcome_md = $div_start_website, $welcome_website_md, $div_end, $div_start_pdf, $welcome_pdf_md, $div_end
+
+    Write-Host "Creating index.qmd from $welcome_website_md_path and $welcome_pdf_md_path"
+
+    if ($PSVer -lt 6) { 
+        [IO.File]::WriteAllLines($index_md_path, $welcome_md)
+    } else {
+        $welcome_md | Out-File $index_md_path
+    }
+    
 }
-$welcome_md_path = "$DEST_ROOT_PATH/index.qmd"
 
-$welcome_website_md = Get-Content $welcome_website_md_path -Raw
-$welcome_pdf_md = Get-Content $welcome_pdf_md_path -Raw
-
-$div_start_website = "::: {.content-visible when-profile=`"website`"}`n"
-$div_start_pdf = "`n::: {.content-visible when-profile=`"pdf`"}`n"
-$div_end = "`n:::`n"
-
-$welcome_md = $div_start_website, $welcome_website_md, $div_end, $div_start_pdf, $welcome_pdf_md, $div_end
-
-Write-Host "Creating index.qmd from $welcome_website_md_path and $welcome_pdf_md_path"
-
-if ($PSVer -lt 6) { 
-    [IO.File]::WriteAllLines($welcome_md_path, $welcome_md)
-} else {
-    $welcome_md | Out-File $welcome_md_path
-}
-
-foreach ($other in $others_pdf) {
+foreach ($other in $others_copy) {
     Write-Host "Processing $other"
 
     if ($others_source_path) {
@@ -564,4 +576,9 @@ foreach ($other in $others_pdf) {
 
     # Copy the PDF file specified in $other located in the $others_fldr to the destination $other_output_file
     Copy-Item -Path "$($others_fldr)\$($other)" -Destination $other_output_file
+}
+
+if (Test-Path -Path ".\images_copy") {
+    Write-Host "Copying images from .\images_copy to .\images"
+    Copy-Item -Path ".\images_copy\*" -Destination ".\images" -Force
 }

@@ -35,9 +35,24 @@ IF "%CLEANUP%"=="reset" (
     ECHO.
     ECHO Remove all existing work folders.
     DEL /Q /S .\requirements\*.* >NUL 2>&1 
+
+    FOR /d %%d IN (".\requirements\*") DO (
+        RMDIR "%%d" /s /q
+    )
+
     DEL /Q /S .\documents\*.* >NUL 2>&1 
+
+    FOR /d %%d IN (".\documents\*") DO (
+        RMDIR "%%d" /s /q
+    )
     DEL /Q /S .\others\*.* >NUL 2>&1 
     DEL /Q /S .\docx\*.* >NUL 2>&1 
+    DEL /Q /S .\images\*.* >NUL 2>&1
+
+    FOR /d %%d IN (".\images\*") DO (
+        RMDIR "%%d" /s /q
+    )
+    DEL /Q /S .\index.qmd .\Leadership.qmd .\Overview.qmd .\QEP-Impact-Report.qmd .\Requirements.qmd .\Signatures.* .\Summary.* .\Support.qmd .\Welcome*.qmd >NUL 2>&1
 )
 IF "%CLEANUP%" NEQ "" (
     ECHO Remove all existing Quarto folders.
