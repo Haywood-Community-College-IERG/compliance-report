@@ -1,5 +1,20 @@
 @ECHO OFF
 
+SETLOCAL
+
+SET "DST_PATH=."
+
+SET "AccredShareCopyLocalDir=Accreditation_Report_COPY"
+SET "AccredShareLocalDir=Accreditation_Report"
+
+SET "REQ_FLDR=requirements"
+SET "DOC_FLDR=documents"
+SET "IMG_FLDR=images"
+SET "OTH_FLDR=other"
+
+SET "SITE_FLDR=_site"
+SET "BOOK_FLDR=_book"
+
 :: Check for the existence of pwsh.exe
 where pwsh.exe >nul 2>&1
 IF %errorlevel% neq 0 (
@@ -34,30 +49,29 @@ IF "%1"=="reset" SET CLEANUP=%1
 IF "%CLEANUP%"=="reset" (
     ECHO.
     ECHO Remove all existing work folders.
-    DEL /Q /S .\requirements\*.* >NUL 2>&1 
+    DEL /Q /S "%DST_PATH%\%REQ_FLDR%\*.*" >NUL 2>&1 
 
-    FOR /d %%d IN (".\requirements\*") DO (
+    FOR /d %%d IN ("%DST_PATH%\%REQ_FLDR%\*") DO (
         RMDIR "%%d" /s /q
     )
 
-    DEL /Q /S .\documents\*.* >NUL 2>&1 
+    DEL /Q /S "%DST_PATH%\%DOC_FLDR%\*.*" >NUL 2>&1 
 
-    FOR /d %%d IN (".\documents\*") DO (
+    FOR /d %%d IN ("%DST_PATH%\%DOC_FLDR%\*") DO (
         RMDIR "%%d" /s /q
     )
-    DEL /Q /S .\others\*.* >NUL 2>&1 
-    DEL /Q /S .\docx\*.* >NUL 2>&1 
-    DEL /Q /S .\images\*.* >NUL 2>&1
+    DEL /Q /S "%DST_PATH%\%OTH_FLDR%\*.*" >NUL 2>&1 
+    DEL /Q /S "%DST_PATH%\%IMG_FLDR%\*.*" >NUL 2>&1
 
-    FOR /d %%d IN (".\images\*") DO (
+    FOR /d %%d IN ("%DST_PATH%\%IMG_FLDR%\*") DO (
         RMDIR "%%d" /s /q
     )
-    DEL /Q /S .\index.qmd .\Leadership.qmd .\Overview.qmd .\QEP-Impact-Report.qmd .\Requirements.qmd .\Signatures.* .\Summary.* .\Support.qmd .\Welcome*.qmd >NUL 2>&1
+    DEL /Q /S "%DST_PATH%\index.qmd" "%DST_PATH%\Leadership.qmd" "%DST_PATH%\Overview.qmd" "%DST_PATH%\QEP-Impact-Report.qmd" "%DST_PATH%\Requirements.qmd" "%DST_PATH%\Signatures.*" "%DST_PATH%.\Summary.*" "%DST_PATH%\Support.qmd" "%DST_PATH%\Welcome*.qmd" >NUL 2>&1
 )
 IF "%CLEANUP%" NEQ "" (
     ECHO Remove all existing Quarto folders.
-    DEL /Q /S .\_site\*.* >NUL 2>&1 
-    DEL /Q /S .\_book\*.* >NUL 2>&1 
+    DEL /Q /S "%DST_PATH%\%SITE_FLDR%\*.*" >NUL 2>&1 
+    DEL /Q /S "%DST_PATH%\%BOOK_FLDR%\*.*" >NUL 2>&1 
     EXIT /b 0
 )
 
@@ -105,24 +119,21 @@ IF ERRORLEVEL 1 (
 
 ECHO.
 ECHO Make sure share folder exists.
-MD _ACCRED_SHARE 2>NUL
-MD _ACCRED_SHARE\_site 2>NUL
+MD "%DST_PATH%\%AccredShareLocalDir%" 2>NUL
+MD "%DST_PATH%\%AccredShareLocalDir%\%SITE_FLDR%" 2>NUL
 
 ECHO.
 ECHO Remove existing files in share folder.
-DEL /Q /S .\_ACCRED_SHARE\*.* >NUL 2>&1 
+DEL /Q /S "%DST_PATH%\%AccredShareLocalDir%\*.*" >NUL 2>&1 
 
 ECHO.
 ECHO Move new files to share folder.
-ROBOCOPY .\_site .\_ACCRED_SHARE\_site /S /MOVE /NFL /NDL /NJH /NJS /NP /NS /NC
-ROBOCOPY .\_book .\_ACCRED_SHARE /S /MOVE /NFL /NDL /NJH /NJS /NP /NS /NC
-ROBOCOPY .\_ACCRED_SHARE_COPY .\_ACCRED_SHARE /S /NFL /NDL /NJH /NJS /NP /NS /NC
+ROBOCOPY "%DST_PATH%\%SITE_FLDR%" "%DST_PATH%\%AccredShareLocalDir%\%SITE_FLDR%" /S /MOVE /NFL /NDL /NJH /NJS /NP /NS /NC
+ROBOCOPY "%DST_PATH%\%BOOK_FLDR%" "%DST_PATH%\%AccredShareLocalDir%" /S /MOVE /NFL /NDL /NJH /NJS /NP /NS /NC
+ROBOCOPY "%DST_PATH%\%AccredShareCopyLocalDir%" "%DST_PATH%\%AccredShareLocalDir%" /S /NFL /NDL /NJH /NJS /NP /NS /NC
 
 ECHO.
-ECHO Create zip file.
-CMD /C .\Create-Accred-Zip.bat
+ECHO Create zip file "%DST_PATH%\%AccredShareLocalDir%".
+CMD /C .\Create-Accred-Zip.bat "%DST_PATH%\%AccredShareLocalDir%"
 
-REM ECHO.
-REM ECHO Remove old folders.
-REM RMDIR _site /S /Q
-REM RMDIR _book /S /Q
+ENDLOCAL

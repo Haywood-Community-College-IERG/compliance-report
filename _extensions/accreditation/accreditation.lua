@@ -1228,7 +1228,7 @@ local filter = {
             end
             --rtn_str = "[" .. pandoc.utils.stringify(el.content) .. "](" .. el.target .. ")"
             qldebug("LINK", "rtn_str: " .. dump(rtn_str))
-            add_to_sources(sources_list, rtn_str)
+            add_to_sources(sources_list, rtn_str, content)
 
             -- Now, save the new target
             el.target = el_target

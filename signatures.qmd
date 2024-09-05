@@ -1,3 +1,0 @@
-```{=latex}
-\includepdf[pages=-]{Signatures.pdf}
-```

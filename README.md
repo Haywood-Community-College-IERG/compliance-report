@@ -28,7 +28,7 @@ quarto add quarto-ext/fontawesome
 
 ### YAML Changes
 
-#### Logo
+#### Change Logo
 
 _quarto-website.yml
 
@@ -49,7 +49,7 @@ book:
     logo: images/GenericLogo.png
 ```
 
-#### Favicon (website icon)
+#### Change Favicon (website icon)
 
 _quarto-website.yml
 
@@ -60,6 +60,16 @@ website:
 ```
 ![Favicon](screenshots/favicon.png)
 
+#### Change Theme
+
+\_quarto-website.yml
+
+```
+format:
+  html:
+    theme: HCC_custom.scss
+```
+
 ### CSS and SCSS Changes
 
 Change the colors to colors that align with your school's brand using the guide below.
@@ -67,6 +77,7 @@ Change the colors to colors that align with your school's brand using the guide 
 #### Changes to `custom.scss`
 
 **Resources**
+
 - [Quarto: HTML Theming](https://quarto.org/docs/output-formats/html-themes.html)
 - [HTML Theming: Dark Mode](https://quarto.org/docs/output-formats/html-themes.html#dark-mode)
 - [More About Quarto Themes](https://quarto.org/docs/output-formats/html-themes-more.html)

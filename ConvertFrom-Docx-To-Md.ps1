@@ -599,14 +599,24 @@ foreach ($other in $others_copy) {
     Copy-Item -Path "$($others_fldr)\$($other)" -Destination $other_output_file
 }
 
-Write-Host "Copy the standard image files"
-if (Test-Path -Path "$images_copy_path") {
-    Write-Host "Copying images from $images_copy_path to .\images"
-    Copy-Item -Path "$images_copy_path\*" -Destination ".\images" -Force
+if (Test-Path -Path "$images_copy_path" -PathType Container) {
+    Write-Host "Copy the standard image files"
+    $loc_images_copy_path = Split-Path -Path "$images_copy_path" -Leaf
+    if (-not (Test-Path -Path "$loc_images_copy_path")) {
+        New-Item -Path "$loc_images_copy_path" -ItemType Directory
+        Write-Output "Creating directory $loc_images_copy_path"
+    }
+    Write-Host "Copying images from $images_copy_path to .\$loc_images_copy_path"
+    Copy-Item -Path "$images_copy_path\*" -Destination ".\$loc_images_copy_path" -Force
 }
 
-Write-Host "Copy the standard documents"
-if (Test-Path -Path "$others_copy_path") {
-    Write-Host "Copying file from $others_copy_path to .\ACRED_SHARE_COPY"
-    Copy-Item -Path "$others_copy_path\*" -Destination ".\ACRED_SHARE_COPY" -Force
+if (Test-Path -Path "$others_copy_path" -PathType Container) {
+    Write-Host "Copy the standard documents"
+    $loc_others_copy_path = Split-Path -Path "$others_copy_path" -Leaf
+    if (-not (Test-Path -Path "$loc_others_copy_path")) {
+        New-Item -Path "$loc_others_copy_path" -ItemType Directory
+        Write-Output "Creating directory $loc_others_copy_path"
+    }
+    Write-Host "Copying files from $others_copy_path to .\$loc_others_copy_path"
+    Copy-Item -Path "$others_copy_path\*" -Destination ".\$loc_others_copy_path" -Force
 }
