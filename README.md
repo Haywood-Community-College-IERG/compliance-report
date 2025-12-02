@@ -26,6 +26,10 @@ The FontAwesome5 extension is also needed, but cannot be installed until after t
 quarto add quarto-ext/fontawesome
 ```
 
+### Install rsvg-convert
+
+To use SVG's in your Quarto, you will need to install `rsvg-convert`. To do that on Windows, run `choco install rsvg-convert`. See (Quarto: PDF Basics: SVG Images)[https://quarto.org/docs/output-formats/pdf-basics.html#svg-images] for more details.
+
 ### YAML Changes
 
 #### Change Logo
