@@ -15,8 +15,21 @@ The `compliance-report` repository is designed to work with Quarto 1.5+.
 
 The FontAwesome5 extension is also needed, but cannot be installed until after the repository is cloned and configured.
 
+NOTE: Be sure to add `C:\Program Files\Quarto\bin\tools` to your path to allow `pandoc` to work.
+
+From a command line, install `tinytext` (which is needed to create PDFs) by executing the following command:
+
+```
+quarto install tinytext
+```
+
 ### Clone repository
 
+Go to ()[https://github.com/Haywood-Community-College-IERG/compliance-report] and clone the repository.
+
+If you have never cloned a repository before, you can clone the repository by downloading the Zip file of the code. Select the green `Code` button at the upper right of the file list and select `Download Zip`.
+
+![Download Zip image](download-zip-image.png)
 
 ## Configure Quarto
 
@@ -25,10 +38,6 @@ The FontAwesome5 extension is also needed, but cannot be installed until after t
 ```
 quarto add quarto-ext/fontawesome
 ```
-
-### Install rsvg-convert
-
-To use SVG's in your Quarto, you will need to install `rsvg-convert`. To do that on Windows, run `choco install rsvg-convert`. See (Quarto: PDF Basics: SVG Images)[https://quarto.org/docs/output-formats/pdf-basics.html#svg-images] for more details.
 
 ### YAML Changes
 

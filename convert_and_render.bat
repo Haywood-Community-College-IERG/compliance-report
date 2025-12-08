@@ -66,7 +66,7 @@ IF "%CLEANUP%"=="reset" (
     FOR /d %%d IN ("%DST_PATH%\%IMG_FLDR%\*") DO (
         RMDIR "%%d" /s /q
     )
-    DEL /Q /S "%DST_PATH%\index.qmd" "%DST_PATH%\Leadership.qmd" "%DST_PATH%\Overview.qmd" "%DST_PATH%\QEP-Impact-Report.qmd" "%DST_PATH%\Requirements.qmd" "%DST_PATH%\Signatures.*" "%DST_PATH%.\Summary.*" "%DST_PATH%\Support.qmd" "%DST_PATH%\Welcome*.qmd" >NUL 2>&1
+    DEL /Q /S "%DST_PATH%\index.qmd" "%DST_PATH%\Leadership.qmd" "%DST_PATH%\Overview.qmd" "%DST_PATH%\QEP-Impact-Report.qmd" "%DST_PATH%\Requirements.qmd" "%DST_PATH%\Signatures.*" "%DST_PATH%\Summary.*" "%DST_PATH%\Support.qmd" "%DST_PATH%\Welcome*.qmd" >NUL 2>&1
 )
 IF "%CLEANUP%" NEQ "" (
     ECHO Remove all existing Quarto folders.

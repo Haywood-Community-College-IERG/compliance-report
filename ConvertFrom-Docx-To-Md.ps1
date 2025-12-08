@@ -214,7 +214,7 @@ function Convert-Pandoc { # ignore
         [string]$extractmedia
     )
 
-    $cmd = "pandoc '$inp' -o '$output' --from $from --to $to --extract-media=$extractmedia"
+    $cmd = "pandoc '$inp' -o '$output' --from $from --to $to --extract-media=$extractmedia --atx-headers"
     Write-Host $cmd
     Invoke-Expression $cmd
 }
@@ -228,7 +228,7 @@ function Convert-Boxes { # ignore
 
     $text = Get-Content $fn
 
-    $text = $text -replace "☒", '{{< fa regular check-square title="Checked box" >}}'
+    $text = $text -replace "☒", '{{< fa regular square-check title="Checked box" >}}'
     $text = $text -replace "☐", '{{< fa regular square title="Unchecked box" >}}'
 
     # Write the modified text back to the file
