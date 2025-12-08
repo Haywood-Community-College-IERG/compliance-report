@@ -281,8 +281,8 @@ The original script was written to accomodate folders that were synchronized wit
 
 ### Get the presentation
 
-You can view the slides by going to [](https://github.com/Haywood-Community-College-IERG/compliance-report/blob/main/Harmonizing%20Accreditation%20Reporting.pdf).
+You can view the slides by going to [https://github.com/Haywood-Community-College-IERG/compliance-report/blob/main/Harmonizing%20Accreditation%20Reporting.pdf](https://github.com/Haywood-Community-College-IERG/compliance-report/blob/main/Harmonizing%20Accreditation%20Reporting.pdf).
 
 ### Watch the video
 
-You can watch the presentation I gave online (this is the same as what I presented at the 2025 SACSCOC Annual Meeting) here: [](https://youtu.be/n2Owl0Sy1F0?si=9o3Yazax7WlLzOaP)
+You can watch the presentation I gave online (this is the same as what I presented at the 2025 SACSCOC Annual Meeting) here: [https://youtu.be/n2Owl0Sy1F0?si=9o3Yazax7WlLzOaP](https://youtu.be/n2Owl0Sy1F0?si=9o3Yazax7WlLzOaP)
